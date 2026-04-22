@@ -1,1 +1,1350 @@
-iaggio.com coming soon!
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>iaggio.com - Your Live En Route</title>
+
+    <link rel="icon" type="image/png" href="/favicon-96x96.png?v=20260421.0" sizes="96x96" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=20260421.0" />
+    <link rel="shortcut icon" href="/favicon.ico?v=20260421.0" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=20260421.0" />
+    <meta name="apple-mobile-web-app-title" content="iaggio.com" />
+    <link rel="manifest" href="/site.webmanifest?v=20260421.0" />
+
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <!-- Font Awesome 6 -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet" />
+    <!-- Fonts -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Source+Code+Pro:wght@400;500&family=Nunito:wght@300;400;600&display=swap"
+        rel="stylesheet" />
+
+    <style>
+        :root {
+            --bg: #07111f;
+            --bg2: #0a1829;
+            --surface: #0c2040;
+            --card: #0f2952;
+            --card-hover: #122f5e;
+            --border: #1a3d72;
+            --border-lit: #2653a0;
+            --accent: #4da8ff;
+            --accent2: #2b91ff;
+            --accent-glow: rgba(77, 168, 255, 0.12);
+            --blue: #a0d0ff;
+            --blue-dim: rgba(77, 168, 255, 0.08);
+            --danger: #ff5252;
+            --danger-dim: #3a0f0f;
+            --warn: #ffb74d;
+            --text: #cde2f8;
+            --text-dim: #7da0cc;
+            --text-bright: #eaf3ff;
+            --mono: 'Source Code Pro', monospace;
+            --display: 'Rajdhani', sans-serif;
+            --body: 'Nunito', sans-serif;
+            --radius: 6px;
+            --radius-lg: 10px;
+        }
+
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: var(--body);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* ── Grid bg texture ── */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(77, 168, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(77, 168, 255, 0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* ── Header ── */
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(7, 17, 31, 0.92);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+            padding: 0.9rem 0;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 0.65rem;
+            font-family: var(--display);
+            font-size: 1.45rem;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--text-bright);
+        }
+
+        .brand-icon {
+            width: 36px;
+            height: 36px;
+            background: var(--accent-glow);
+            border: 1px solid var(--accent);
+            border-radius: var(--radius);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--accent);
+            font-size: 1rem;
+        }
+
+        .brand em {
+            font-style: normal;
+            color: var(--accent);
+        }
+
+        .header-meta {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        /* ── View config ── */
+        .view-config {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 0.28rem 0.45rem 0.28rem 0.75rem;
+            transition: border-color 0.15s;
+        }
+
+        .view-config:focus-within {
+            border-color: var(--border-lit);
+        }
+
+        .view-config-icon {
+            color: var(--text-dim);
+            font-size: 0.7rem;
+            flex-shrink: 0;
+        }
+
+        .view-input {
+            background: none;
+            border: none;
+            outline: none;
+            color: var(--text-bright);
+            font-family: var(--mono);
+            font-size: 0.78rem;
+            letter-spacing: 0.08em;
+            width: 80px;
+            min-width: 0;
+        }
+
+        .view-input::placeholder {
+            color: var(--text-dim);
+        }
+
+        .btn-view-go {
+            background: var(--accent-glow);
+            border: 1px solid rgba(77, 168, 255, 0.3);
+            border-radius: 50%;
+            width: 22px;
+            height: 22px;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--accent);
+            font-size: 0.62rem;
+            cursor: pointer;
+            transition: background 0.15s, border-color 0.15s;
+        }
+
+        .btn-view-go:hover {
+            background: rgba(77, 168, 255, 0.22);
+            border-color: var(--accent);
+        }
+
+        /* ── Count badge ── */
+        .loc-badge {
+            display: flex;
+            align-items: center;
+            gap: 0.45rem;
+            font-family: var(--mono);
+            font-size: 0.72rem;
+            color: var(--text-dim);
+            letter-spacing: 0.1em;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 0.3rem 0.75rem;
+        }
+
+        .loc-badge i {
+            color: var(--accent);
+            font-size: 0.65rem;
+        }
+
+        .loc-badge strong {
+            color: var(--accent);
+            font-size: 0.85rem;
+        }
+
+        /* ── Main ── */
+        main {
+            position: relative;
+            z-index: 1;
+            padding: 2rem 0 4rem;
+        }
+
+        /* ── Add Panel ── */
+        .add-panel {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 1.4rem 1.6rem;
+            margin-bottom: 1.8rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .add-panel::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--accent), transparent);
+        }
+
+        .panel-label {
+            font-family: var(--mono);
+            font-size: 0.68rem;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: var(--text-dim);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .panel-label i {
+            color: var(--accent);
+        }
+
+        .form-label {
+            font-family: var(--mono);
+            font-size: 0.68rem;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--text-dim);
+            margin-bottom: 0.4rem;
+            display: block;
+        }
+
+        .form-control {
+            background: var(--bg2);
+            border: 1px solid var(--border);
+            color: var(--text-bright);
+            border-radius: var(--radius);
+            font-family: var(--body);
+            font-size: 0.92rem;
+            padding: 0.55rem 0.85rem;
+            transition: border-color 0.15s, box-shadow 0.15s;
+            width: 100%;
+        }
+
+        .form-control::placeholder {
+            color: var(--text-dim);
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-glow);
+            background: var(--bg2);
+            color: var(--text-bright);
+        }
+
+        .btn-primary-custom {
+            background: var(--accent);
+            color: #030d1f;
+            border: none;
+            border-radius: var(--radius);
+            font-family: var(--display);
+            font-size: 0.95rem;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            padding: 0.58rem 1.3rem;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: background 0.15s, transform 0.1s, box-shadow 0.15s;
+            white-space: nowrap;
+        }
+
+        .btn-primary-custom:hover {
+            background: var(--accent2);
+            box-shadow: 0 4px 18px rgba(77, 168, 255, 0.3);
+            transform: translateY(-1px);
+        }
+
+        .btn-primary-custom:active {
+            transform: translateY(0);
+        }
+
+        .btn-primary-custom:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .form-error {
+            font-size: 0.78rem;
+            color: var(--danger);
+            margin-top: 0.5rem;
+            display: none;
+        }
+
+        /* ── Toolbar ── */
+        .toolbar {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.2rem;
+        }
+
+        .search-wrap {
+            position: relative;
+            flex: 1;
+        }
+
+        .search-wrap i {
+            position: absolute;
+            left: 0.85rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-dim);
+            font-size: 0.8rem;
+            pointer-events: none;
+        }
+
+        .search-wrap input {
+            padding-left: 2.2rem;
+        }
+
+        .sort-label {
+            font-family: var(--mono);
+            font-size: 0.68rem;
+            color: var(--text-dim);
+            letter-spacing: 0.1em;
+            white-space: nowrap;
+        }
+
+        /* ── Cards ── */
+        .loc-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 1.5rem 1.6rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+            transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s, background 0.2s;
+            position: relative;
+            overflow: hidden;
+            animation: cardIn 0.3s ease both;
+        }
+
+        @keyframes cardIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .loc-card:hover {
+            border-color: var(--border-lit);
+            background: var(--card-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 28px rgba(0, 0, 0, 0.45);
+        }
+
+        /* accent left bar */
+        .loc-card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 3px;
+            height: 100%;
+            background: var(--accent);
+            opacity: 0;
+            transition: opacity 0.2s;
+            border-radius: 3px 0 0 3px;
+        }
+
+        .loc-card:hover::after {
+            opacity: 1;
+        }
+
+        .card-type-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            font-family: var(--mono);
+            font-size: 0.72rem;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            padding: 0.22rem 0.6rem;
+            border-radius: 20px;
+            width: fit-content;
+        }
+
+        .badge-address {
+            background: rgba(160, 208, 255, 0.08);
+            color: var(--blue);
+            border: 1px solid rgba(160, 208, 255, 0.2);
+        }
+
+        .badge-pluscode {
+            background: var(--accent-glow);
+            color: var(--accent);
+            border: 1px solid rgba(77, 168, 255, 0.25);
+        }
+
+        .card-name {
+            font-family: var(--display);
+            font-size: 1.45rem;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            color: var(--text-bright);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            line-height: 1.2;
+        }
+
+        .card-location {
+            font-family: var(--mono);
+            font-size: 0.9rem;
+            color: var(--text-dim);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            line-height: 1.5;
+        }
+
+        .maps-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.45rem;
+            font-family: var(--display);
+            font-size: 0.95rem;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--accent);
+            text-decoration: none;
+            padding: 0.5rem 0.9rem;
+            border: 1px solid rgba(77, 168, 255, 0.25);
+            border-radius: var(--radius);
+            background: var(--accent-glow);
+            transition: background 0.15s, border-color 0.15s, color 0.15s, box-shadow 0.15s;
+            width: 100%;
+        }
+
+        .maps-link:hover {
+            background: rgba(77, 168, 255, 0.2);
+            border-color: var(--accent);
+            color: var(--accent);
+            box-shadow: 0 0 14px var(--accent-glow);
+        }
+
+        .card-actions {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin-top: 0.25rem;
+            padding-top: 0.75rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .btn-icon {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            background: none;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 0.35rem 0.75rem;
+            font-family: var(--mono);
+            font-size: 0.82rem;
+            letter-spacing: 0.06em;
+            color: var(--text-dim);
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .btn-icon:hover {
+            border-color: var(--text-dim);
+            color: var(--text);
+        }
+
+        .btn-icon.danger:hover {
+            border-color: var(--danger);
+            color: var(--danger);
+            background: var(--danger-dim);
+        }
+
+        .btn-icon.success:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+            background: var(--accent-glow);
+        }
+
+        .btn-icon:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        /* ── Inline edit ── */
+        .edit-form {
+            display: none;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin-top: 0.3rem;
+        }
+
+        .edit-form.active {
+            display: flex;
+        }
+
+        .edit-form .form-control {
+            font-size: 0.9rem;
+            padding: 0.45rem 0.7rem;
+        }
+
+        .edit-actions {
+            display: flex;
+            gap: 0.45rem;
+        }
+
+        /* ── Loading overlay ── */
+        .card-loading {
+            position: absolute;
+            inset: 0;
+            background: rgba(10, 24, 41, 0.75);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: var(--radius-lg);
+            z-index: 10;
+        }
+
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* ── Empty state ── */
+        .empty-state {
+            text-align: center;
+            padding: 5rem 0;
+            color: var(--text-dim);
+        }
+
+        .empty-state .empty-icon {
+            font-size: 3rem;
+            color: var(--border-lit);
+            margin-bottom: 1.2rem;
+            display: block;
+        }
+
+        .empty-state p {
+            font-family: var(--mono);
+            font-size: 0.8rem;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+
+        /* ── Page loader ── */
+        .page-loader {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            padding: 5rem 0;
+            color: var(--text-dim);
+        }
+
+        .page-loader .spinner {
+            width: 32px;
+            height: 32px;
+            border-width: 3px;
+        }
+
+        .page-loader p {
+            font-family: var(--mono);
+            font-size: 0.75rem;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+        }
+
+        /* ── Toast ── */
+        #toastContainer {
+            position: fixed;
+            bottom: 1.5rem;
+            right: 1.5rem;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            pointer-events: none;
+        }
+
+        .toast-item {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            padding: 0.65rem 1rem;
+            border-radius: var(--radius);
+            font-family: var(--mono);
+            font-size: 0.78rem;
+            letter-spacing: 0.06em;
+            animation: toastIn 0.25s ease both;
+            pointer-events: auto;
+            max-width: 300px;
+        }
+
+        @keyframes toastIn {
+            from {
+                opacity: 0;
+                transform: translateX(16px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .toast-item.success {
+            background: var(--surface);
+            border: 1px solid var(--accent);
+            color: var(--text);
+        }
+
+        .toast-item.success i {
+            color: var(--accent);
+        }
+
+        .toast-item.error {
+            background: var(--surface);
+            border: 1px solid var(--danger);
+            color: var(--text);
+        }
+
+        .toast-item.error i {
+            color: var(--danger);
+        }
+
+        .toast-item.warning {
+            background: var(--surface);
+            border: 1px solid var(--warn);
+            color: var(--text);
+        }
+
+        .toast-item.warning i {
+            color: var(--warn);
+        }
+
+        /* ── Share bar ── */
+        .share-bar {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 0.75rem 1.2rem;
+            margin-bottom: 1.25rem;
+            font-family: var(--mono);
+            font-size: 0.8rem;
+            letter-spacing: 0.06em;
+            flex-wrap: wrap;
+        }
+
+        .share-bar-icon {
+            color: var(--accent);
+            font-size: 0.85rem;
+            flex-shrink: 0;
+        }
+
+        .share-bar-label {
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 0.14em;
+            font-size: 0.68rem;
+            flex-shrink: 0;
+        }
+
+        .share-bar-link {
+            color: var(--accent);
+            text-decoration: none;
+            flex: 1;
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .share-bar-link:hover {
+            text-decoration: underline;
+        }
+
+        .share-bar-loading {
+            color: var(--text-dim);
+            font-style: italic;
+        }
+
+        .btn-copy {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            background: var(--accent-glow);
+            border: 1px solid rgba(77, 168, 255, 0.3);
+            border-radius: var(--radius);
+            padding: 0.28rem 0.65rem;
+            font-family: var(--mono);
+            font-size: 0.72rem;
+            letter-spacing: 0.06em;
+            color: var(--accent);
+            cursor: pointer;
+            transition: background 0.15s, border-color 0.15s;
+            flex-shrink: 0;
+            white-space: nowrap;
+        }
+
+        .btn-copy:hover {
+            background: rgba(77, 168, 255, 0.2);
+            border-color: var(--accent);
+        }
+
+        .btn-copy.copied {
+            color: #6dffb3;
+            border-color: #6dffb3;
+            background: rgba(109, 255, 179, 0.08);
+        }
+
+        /* ── Footer ── */
+        footer {
+            position: relative;
+            z-index: 1;
+            border-top: 1px solid var(--border);
+            padding: 1.25rem 0;
+            text-align: center;
+            font-family: var(--mono);
+            font-size: 0.72rem;
+            letter-spacing: 0.12em;
+            color: var(--text-dim);
+        }
+
+        /* ── Responsive ── */
+        @media (max-width: 575px) {
+            .header-meta {
+                gap: 0.5rem;
+            }
+
+            .view-input {
+                width: 52px;
+            }
+
+            .loc-badge {
+                padding: 0.3rem 0.55rem;
+            }
+
+            .loc-badge .badge-label {
+                display: none;
+            }
+
+            .loc-card {
+                padding: 1.2rem 1.25rem;
+            }
+
+            .card-name {
+                font-size: 1.25rem;
+            }
+        }
+
+        @media (max-width: 400px) {
+            .brand {
+                font-size: 1.15rem;
+                gap: 0.5rem;
+            }
+
+            .brand-icon {
+                width: 30px;
+                height: 30px;
+                font-size: 0.85rem;
+            }
+
+            .loc-badge {
+                display: none;
+            }
+
+            .view-input {
+                width: 60px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Header -->
+    <header>
+        <div class="container d-flex align-items-center justify-content-between">
+            <div class="brand">
+                <div class="brand-icon"><a href="/"><i class="fa-solid fa-map-marked-alt"></i></a></div>
+                iaggio<em>travel</em>
+            </div>
+            <div class="header-meta">
+                <div class="view-config">
+                    <i class="fa-solid fa-folder-open view-config-icon"></i>
+                    <input id="configNameInput" type="text" class="view-input" placeholder="home"
+                        title="Enter a view name and press Enter to switch" />
+                    <button class="btn-view-go" onclick="applyConfigName()" title="Switch view">
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </div>
+                <div class="loc-badge">
+                    <i class="fa-solid fa-layer-group"></i>
+                    <strong id="locCount">—</strong><span class="badge-label">&nbsp;saved</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main -->
+    <main>
+        <div class="container">
+
+            <!-- Share Bar (non-home views only) -->
+            <div id="shareBar" style="display:none;"></div>
+
+            <!-- Add Panel -->
+            <div class="add-panel">
+                <div class="panel-label">
+                    <i class="fa-solid fa-location-dot"></i> New Location
+                </div>
+                <div class="row g-2 align-items-end">
+                    <div class="col-md-4">
+                        <label class="form-label">Name</label>
+                        <input id="inName" type="text" class="form-control"
+                            placeholder="e.g. Warehouse 3, Site Alpha" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Address or Plus Code</label>
+                        <input id="inLocation" type="text" class="form-control"
+                            placeholder="e.g. 123 Main St  or  8FW4V75Q+8Q" />
+                    </div>
+                    <div class="col-md-2">
+                        <button id="btnAdd" class="btn-primary-custom w-100" onclick="addLocation()">
+                            <i class="fa-solid fa-plus"></i> Add
+                        </button>
+                    </div>
+                </div>
+                <div id="formError" class="form-error"></div>
+            </div>
+
+            <!-- Toolbar -->
+            <div class="toolbar">
+                <div class="search-wrap">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input id="searchInput" type="text" class="form-control" placeholder="Filter by name or location…"
+                        oninput="renderCards()" />
+                </div>
+                <div class="sort-label">
+                    <i class="fa-solid fa-arrow-down-a-z" style="color:var(--accent);margin-right:.35rem;"></i>A → Z
+                </div>
+            </div>
+
+            <!-- Card Grid -->
+            <div id="cardGrid" class="row g-3"></div>
+
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            &copy; Brackets LLC <span id="footerYear"></span>
+        </div>
+    </footer>
+
+    <!-- Toast Container -->
+    <div id="toastContainer"></div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/core-js-bundle@3.37.1/minified.js"></script>
+
+    <script>
+        // ── CONFIG ──────────────────────────────────────────────────────
+        const _urlParams = new URLSearchParams(window.location.search);
+        const _urlName = (_urlParams.get('v') || '').trim();
+
+        const CONFIG = {
+            baseUrl: 'https://zzzap.io',
+            group: 'iaggio.com',
+            name: _urlName || 'home'
+        };
+
+        // When name is "home", use localStorage instead of the API
+        const USE_LOCAL = CONFIG.name === 'home';
+        const LS_KEY = 'iaggio_locs_home';
+
+        // ── STATE ───────────────────────────────────────────────────────
+        let locations = []; // { id, name, location, zen }
+
+        // ── VIEW NAME UI ─────────────────────────────────────────────────
+        function initViewInput() {
+            const input = document.getElementById('configNameInput');
+            input.value = CONFIG.name;
+            input.addEventListener('keydown', e => {
+                if (e.key === 'Enter') applyConfigName();
+            });
+        }
+
+        function applyConfigName() {
+            const input = document.getElementById('configNameInput');
+            const newName = input.value.trim().toLowerCase().replace(/[^a-z0-9_-]/g, '');
+            if (!newName || newName === CONFIG.name) {
+                input.value = CONFIG.name;
+                return;
+            }
+            if (newName === 'home') {
+                window.location.href = window.location.pathname;
+            } else {
+                window.location.href = window.location.pathname + '?v=' + encodeURIComponent(newName);
+            }
+        }
+
+        // ── PLUS CODE DETECTION ─────────────────────────────────────────
+        function isPlusCode(str) {
+            const OLC = '[23456789CFGHJMPQRVWXcfghjmpqrvwx]';
+            const full = new RegExp(`^${OLC}{4,8}\\+${OLC}{0,2}$`);
+            const short_ = new RegExp(`^${OLC}{2,6}\\+${OLC}{2,3}(\\s.+)?$`);
+            const s = str.trim();
+            return full.test(s) || short_.test(s);
+        }
+
+        // ── UUID ─────────────────────────────────────────────────────────
+        function uid() {
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+                const r = Math.random() * 16 | 0;
+                return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+            });
+        }
+
+        // ── MAPS URL ─────────────────────────────────────────────────────
+        function mapsUrl(loc) {
+            return 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(loc);
+        }
+
+        // ── LOCAL STORAGE HELPERS ────────────────────────────────────────
+        function getLocalLocs() {
+            try { return JSON.parse(localStorage.getItem(LS_KEY) || '[]'); }
+            catch (_) { return []; }
+        }
+
+        function saveLocalLocs(locs) {
+            localStorage.setItem(LS_KEY, JSON.stringify(locs));
+        }
+
+        // ── API HELPERS ──────────────────────────────────────────────────
+        async function apiGet(endpoint) {
+            const res = await fetch(CONFIG.baseUrl + endpoint);
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            const data = await res.json();
+            if (!data.success) throw new Error(data.messages?.primary?.[0] || 'API error');
+            return data;
+        }
+
+        async function zenGet() {
+            const data = await apiGet(
+                `/Collections/zenGet?group=${encodeURIComponent(CONFIG.group)}&name=${encodeURIComponent(CONFIG.name)}&limit=100`
+            );
+            return (data.response || []).map(r => ({ id: r.id, name: r.name, location: r.location, zen: r.zen }));
+        }
+
+        async function zenPost(record) {
+            const json = encodeURIComponent(JSON.stringify({ id: record.id, name: record.name, location: record.location }));
+            const data = await apiGet(
+                `/Collections/zenPost?group=${encodeURIComponent(CONFIG.group)}&name=${encodeURIComponent(CONFIG.name)}&json=${json}`
+            );
+            const r = data.response[0];
+            return { id: r.id, name: r.name, location: r.location, zen: r.zen };
+        }
+
+        async function zenPut(zen, record) {
+            const json = encodeURIComponent(JSON.stringify({ id: record.id, name: record.name, location: record.location }));
+            const data = await apiGet(
+                `/Collections/zenPut?zen=${encodeURIComponent(zen)}&json=${json}`
+            );
+            const r = data.response[0];
+            return { id: r.id, name: r.name, location: r.location, zen: r.zen };
+        }
+
+        async function zenDelete(zen) {
+            await apiGet(`/Collections/zenDelete?zen=${encodeURIComponent(zen)}`);
+        }
+
+        // ── CRUD DISPATCH ────────────────────────────────────────────────
+        async function recordAdd(name, location) {
+            if (USE_LOCAL) {
+                const record = { id: uid(), name, location, zen: uid() };
+                const locs = getLocalLocs();
+                locs.push(record);
+                saveLocalLocs(locs);
+                return record;
+            }
+            return await zenPost({ id: uid(), name, location });
+        }
+
+        async function recordUpdate(zen, name, location) {
+            const rec = locations.find(l => l.zen === zen);
+            if (!rec) throw new Error('Record not found');
+            if (USE_LOCAL) {
+                rec.name = name;
+                rec.location = location;
+                saveLocalLocs(locations);
+                return { ...rec };
+            }
+            return await zenPut(zen, { id: rec.id, name, location });
+        }
+
+        async function recordDelete(zen) {
+            if (USE_LOCAL) {
+                saveLocalLocs(locations.filter(l => l.zen !== zen));
+                return;
+            }
+            await zenDelete(zen);
+        }
+
+        // ── LOAD ─────────────────────────────────────────────────────────
+        async function loadLocations() {
+            if (USE_LOCAL) {
+                locations = getLocalLocs();
+                sortLocations();
+                renderCards();
+                return;
+            }
+
+            const grid = document.getElementById('cardGrid');
+            grid.innerHTML = `
+      <div class="col-12">
+        <div class="page-loader">
+          <div class="spinner"></div>
+          <p><i class="fa-solid fa-satellite-dish" style="margin-right:.4rem;color:var(--accent);"></i>Fetching locations…</p>
+        </div>
+      </div>`;
+            try {
+                locations = await zenGet();
+                sortLocations();
+                renderCards();
+            } catch (e) {
+                grid.innerHTML = '';
+                toast('Failed to load locations: ' + e.message, 'error');
+            }
+        }
+
+        // ── SORT ─────────────────────────────────────────────────────────
+        function sortLocations() {
+            locations.sort((a, b) => a.name.localeCompare(b.name));
+        }
+
+        // ── ADD ──────────────────────────────────────────────────────────
+        async function addLocation() {
+            const nameEl = document.getElementById('inName');
+            const locEl = document.getElementById('inLocation');
+            const errEl = document.getElementById('formError');
+            const btnAdd = document.getElementById('btnAdd');
+
+            const name = nameEl.value.trim();
+            const location = locEl.value.trim();
+
+            if (!name || !location) {
+                errEl.textContent = 'Both name and location are required.';
+                errEl.style.display = 'block';
+                return;
+            }
+            errEl.style.display = 'none';
+
+            btnAdd.disabled = true;
+            btnAdd.innerHTML = '<span class="spinner" style="width:14px;height:14px;border-width:2px;display:inline-block;"></span> Saving…';
+
+            try {
+                const saved = await recordAdd(name, location);
+                locations.push(saved);
+                sortLocations();
+                nameEl.value = '';
+                locEl.value = '';
+                renderCards();
+                toast('Location saved', 'success');
+            } catch (e) {
+                toast('Save failed: ' + e.message, 'error');
+            } finally {
+                btnAdd.disabled = false;
+                btnAdd.innerHTML = '<i class="fa-solid fa-plus"></i> Add';
+            }
+        }
+
+        // ── DELETE ───────────────────────────────────────────────────────
+        async function deleteLocation(zen) {
+            const card = document.querySelector(`[data-zen="${CSS.escape(zen)}"]`);
+            if (card) {
+                const overlay = document.createElement('div');
+                overlay.className = 'card-loading';
+                overlay.innerHTML = '<div class="spinner"></div>';
+                card.appendChild(overlay);
+            }
+            try {
+                await recordDelete(zen);
+                locations = locations.filter(l => l.zen !== zen);
+                renderCards();
+                toast('Location removed', 'success');
+            } catch (e) {
+                if (card) card.querySelector('.card-loading')?.remove();
+                toast('Delete failed: ' + e.message, 'error');
+            }
+        }
+
+        // ── EDIT ─────────────────────────────────────────────────────────
+        function startEdit(zen) {
+            const card = document.querySelector(`[data-zen="${CSS.escape(zen)}"]`);
+            card.querySelector('.view-section').style.display = 'none';
+            card.querySelector('.edit-form').classList.add('active');
+            card.querySelector('.edit-name').focus();
+        }
+
+        function cancelEdit(zen) {
+            const card = document.querySelector(`[data-zen="${CSS.escape(zen)}"]`);
+            card.querySelector('.view-section').style.display = '';
+            card.querySelector('.edit-form').classList.remove('active');
+        }
+
+        async function saveEdit(zen) {
+            const card = document.querySelector(`[data-zen="${CSS.escape(zen)}"]`);
+            const newName = card.querySelector('.edit-name').value.trim();
+            const newLoc = card.querySelector('.edit-loc').value.trim();
+
+            if (!newName || !newLoc) return;
+
+            const saveBtn = card.querySelector('.btn-save-edit');
+            saveBtn.disabled = true;
+            saveBtn.innerHTML = '<span class="spinner" style="width:12px;height:12px;border-width:2px;display:inline-block;"></span>';
+
+            try {
+                const updated = await recordUpdate(zen, newName, newLoc);
+                const idx = locations.findIndex(l => l.zen === zen);
+                locations[idx] = updated;
+                sortLocations();
+                renderCards();
+                toast('Location updated', 'success');
+            } catch (e) {
+                saveBtn.disabled = false;
+                saveBtn.innerHTML = '<i class="fa-solid fa-check"></i>';
+                toast('Update failed: ' + e.message, 'error');
+            }
+        }
+
+        // ── RENDER ───────────────────────────────────────────────────────
+        function renderCards() {
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            const filtered = locations.filter(l =>
+                l.name.toLowerCase().includes(query) ||
+                l.location.toLowerCase().includes(query)
+            );
+
+            document.getElementById('locCount').textContent = locations.length;
+
+            const grid = document.getElementById('cardGrid');
+
+            if (filtered.length === 0) {
+                grid.innerHTML = `
+        <div class="col-12">
+          <div class="empty-state">
+            <i class="fa-solid fa-compass empty-icon"></i>
+            <p>${query ? 'No locations match your search.' : 'No locations saved yet — add one above.'}</p>
+          </div>
+        </div>`;
+                return;
+            }
+
+            grid.innerHTML = filtered.map((l, i) => {
+                const isPlus = isPlusCode(l.location);
+                const badge = isPlus
+                    ? `<span class="card-type-badge badge-pluscode"><i class="fa-solid fa-th"></i> Plus Code</span>`
+                    : `<span class="card-type-badge badge-address"><i class="fa-solid fa-map-marker-alt"></i> Address</span>`;
+
+                return `
+        <div class="col-sm-6 col-lg-4">
+          <div class="loc-card" data-zen="${esc(l.zen)}" style="animation-delay:${i * 0.04}s">
+
+            <div class="view-section">
+              ${badge}
+              <div class="card-name" title="${esc(l.name)}">${esc(l.name)}</div>
+              <div class="card-location" title="${esc(l.location)}">${esc(l.location)}</div>
+              <a class="maps-link" href="${mapsUrl(l.location)}" target="_blank" rel="noopener noreferrer">
+                <i class="fa-solid fa-route"></i> Navigate
+              </a>
+              <div class="card-actions">
+                <button class="btn-icon" onclick="startEdit('${esc(l.zen)}')">
+                  <i class="fa-solid fa-pen"></i> Edit
+                </button>
+                <button class="btn-icon danger" onclick="deleteLocation('${esc(l.zen)}')">
+                  <i class="fa-solid fa-trash-alt"></i> Delete
+                </button>
+              </div>
+            </div>
+
+            <div class="edit-form">
+              <input class="form-control edit-name" value="${esc(l.name)}" placeholder="Name"/>
+              <input class="form-control edit-loc"  value="${esc(l.location)}" placeholder="Address or Plus Code"/>
+              <div class="edit-actions">
+                <button class="btn-icon success btn-save-edit" onclick="saveEdit('${esc(l.zen)}')">
+                  <i class="fa-solid fa-check"></i> Save
+                </button>
+                <button class="btn-icon" onclick="cancelEdit('${esc(l.zen)}')">
+                  <i class="fa-solid fa-times"></i> Cancel
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </div>`;
+            }).join('');
+        }
+
+        // ── TOAST ─────────────────────────────────────────────────────────
+        function toast(msg, type = 'success') {
+            const icons = { success: 'fa-check-circle', error: 'fa-triangle-exclamation', warning: 'fa-triangle-exclamation' };
+            const wrap = document.getElementById('toastContainer');
+            const el = document.createElement('div');
+            el.className = `toast-item ${type}`;
+            el.innerHTML = `<i class="fa-solid ${icons[type]}"></i> ${esc(msg)}`;
+            wrap.appendChild(el);
+            setTimeout(() => el.remove(), 3000);
+        }
+
+        // ── ESCAPE ───────────────────────────────────────────────────────
+        function esc(str) {
+            return String(str)
+                .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+        }
+
+        // ── ENTER KEY ────────────────────────────────────────────────────
+        ['inName', 'inLocation'].forEach(id => {
+            document.getElementById(id).addEventListener('keydown', e => {
+                if (e.key === 'Enter') addLocation();
+            });
+        });
+
+        // ── SHORT LINK ───────────────────────────────────────────────────
+        async function loadShortLink() {
+            const bar = document.getElementById('shareBar');
+            bar.className = 'share-bar';
+            bar.style.display = '';
+            bar.innerHTML = `
+                <i class="fa-solid fa-link share-bar-icon"></i>
+                <span class="share-bar-label">Share</span>
+                <span class="share-bar-loading">Generating short link…</span>`;
+
+            try {
+                const u = encodeURIComponent(location.href);
+                const b = encodeURIComponent('https://v.iaggio.com/');
+                const r = await fetch(`https://zzzap.io/Url/link?link=${u}&baseUrl=${b}`);
+                const j = await r.json();
+                const out = j?.response?.short;
+
+                if (out) {
+                    bar.innerHTML = `
+                        <i class="fa-solid fa-link share-bar-icon"></i>
+                        <span class="share-bar-label">Share</span>
+                        <a class="share-bar-link" href="${esc(out)}" target="_blank" rel="noopener noreferrer">${esc(out)}</a>
+                        <button class="btn-copy" id="btnCopyShort" onclick="copyShortLink('${esc(out)}')">
+                            <i class="fa-regular fa-copy"></i> Copy
+                        </button>`;
+                } else {
+                    bar.style.display = 'none';
+                }
+            } catch (_) {
+                bar.style.display = 'none';
+            }
+        }
+
+        function copyShortLink(url) {
+            navigator.clipboard.writeText(url).then(() => {
+                const btn = document.getElementById('btnCopyShort');
+                if (!btn) return;
+                btn.classList.add('copied');
+                btn.innerHTML = '<i class="fa-solid fa-check"></i> Copied';
+                setTimeout(() => {
+                    btn.classList.remove('copied');
+                    btn.innerHTML = '<i class="fa-regular fa-copy"></i> Copy';
+                }, 2000);
+            });
+        }
+
+        // ── INIT ─────────────────────────────────────────────────────────
+        document.getElementById('footerYear').textContent = new Date().getFullYear();
+        initViewInput();
+        if (!USE_LOCAL) loadShortLink();
+        loadLocations();
+    </script>
+</body>
+
+</html>
