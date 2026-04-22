@@ -322,6 +322,32 @@
             transform: none;
         }
 
+        .btn-test {
+            background: none;
+            border: 1px solid var(--border-lit);
+            border-radius: var(--radius);
+            font-family: var(--display);
+            font-size: 0.95rem;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            padding: 0.58rem 1rem;
+            color: var(--text-dim);
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            transition: border-color 0.15s, color 0.15s, background 0.15s;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .btn-test:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+            background: var(--accent-glow);
+        }
+
         .form-error {
             font-size: 0.78rem;
             color: var(--danger);
@@ -884,15 +910,20 @@
                         <input id="inName" type="text" class="form-control"
                             placeholder="e.g. Warehouse 3, Site Alpha" />
                     </div>
-                    <div class="col-md-6">
+                    <div class="col-md-5">
                         <label class="form-label">Address or Plus Code</label>
                         <input id="inLocation" type="text" class="form-control"
                             placeholder="e.g. 123 Main St  or  8FW4V75Q+8Q" />
                     </div>
-                    <div class="col-md-2">
-                        <button id="btnAdd" class="btn-primary-custom w-100" onclick="addLocation()">
-                            <i class="fa-solid fa-plus"></i> Add
-                        </button>
+                    <div class="col-md-3">
+                        <div class="d-flex gap-2">
+                            <button id="btnAdd" class="btn-primary-custom flex-fill" onclick="addLocation()">
+                                <i class="fa-solid fa-plus"></i> Add
+                            </button>
+                            <button class="btn-test" onclick="testLocation()" title="Test in Google Maps">
+                                <i class="fa-solid fa-map-location-dot"></i> Test
+                            </button>
+                        </div>
                     </div>
                 </div>
                 <div id="formError" class="form-error"></div>
@@ -1105,6 +1136,21 @@
             locations.sort((a, b) => a.name.localeCompare(b.name));
         }
 
+        // ── LOCATION VALIDATION ──────────────────────────────────────────
+        function testLocation() {
+            const val = document.getElementById('inLocation').value.trim();
+            if (!val) return;
+            window.open(mapsUrl(val), '_blank', 'noopener,noreferrer');
+        }
+
+        function locationIsValid(val) {
+            if (!val) return false;
+            // If the value contains '+' it must be a valid Plus Code
+            if (val.includes('+')) return isPlusCode(val);
+            // Otherwise accept as a plain address
+            return true;
+        }
+
         // ── ADD ──────────────────────────────────────────────────────────
         async function addLocation() {
             const nameEl = document.getElementById('inName');
@@ -1120,6 +1166,13 @@
                 errEl.style.display = 'block';
                 return;
             }
+
+            if (!locationIsValid(location)) {
+                errEl.textContent = 'The Plus Code format is invalid — check the code and try again.';
+                errEl.style.display = 'block';
+                return;
+            }
+
             errEl.style.display = 'none';
 
             btnAdd.disabled = true;
