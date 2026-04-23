@@ -348,6 +348,12 @@
             background: var(--accent-glow);
         }
 
+        @media (max-width: 991px) {
+            .btn-test-label { display: none; }
+            .btn-test { padding: 0.58rem 0.75rem; }
+            .share-bar-label { display: none; }
+        }
+
         .form-error {
             font-size: 0.78rem;
             color: var(--danger);
@@ -1078,7 +1084,7 @@
                                 <i class="fa-solid fa-plus"></i> Add
                             </button>
                             <button class="btn-test" onclick="testLocation()" title="Test in Google Maps">
-                                <i class="fa-solid fa-map-location-dot"></i> Test
+                                <i class="fa-solid fa-map-location-dot"></i><span class="btn-test-label"> Test</span>
                             </button>
                         </div>
                     </div>
