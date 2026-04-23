@@ -803,6 +803,163 @@
             background: rgba(109, 255, 179, 0.08);
         }
 
+        /* ── Waypoint toggle on card ── */
+        .btn-waypoint {
+            position: absolute;
+            top: 0.85rem;
+            right: 0.85rem;
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            border: 1px solid var(--border);
+            background: rgba(7, 17, 31, 0.55);
+            color: var(--text-dim);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.65rem;
+            font-family: var(--mono);
+            font-weight: 700;
+            line-height: 1;
+            transition: all 0.15s;
+            z-index: 2;
+        }
+
+        .btn-waypoint:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+            background: var(--accent-glow);
+        }
+
+        .btn-waypoint.active {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: #030d1f;
+        }
+
+        .loc-card.is-waypoint {
+            border-color: var(--border-lit);
+            box-shadow: 0 0 0 1px rgba(77, 168, 255, 0.15);
+        }
+
+        /* ── Route bar ── */
+        .route-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 90;
+            background: rgba(9, 20, 41, 0.96);
+            backdrop-filter: blur(12px);
+            border-top: 2px solid var(--accent);
+            padding: 0.65rem 0;
+            animation: slideUp 0.2s ease both;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+
+        .route-bar-inner {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            flex-wrap: nowrap;
+        }
+
+        .route-bar-icon {
+            color: var(--accent);
+            font-size: 0.9rem;
+            flex-shrink: 0;
+        }
+
+        .route-bar-label {
+            font-family: var(--mono);
+            font-size: 0.7rem;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--text-dim);
+            flex-shrink: 0;
+        }
+
+        .route-bar-chips {
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+            flex: 1;
+            min-width: 0;
+            overflow-x: auto;
+            scrollbar-width: none;
+        }
+
+        .route-bar-chips::-webkit-scrollbar { display: none; }
+
+        .route-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            background: var(--accent-glow);
+            border: 1px solid rgba(77, 168, 255, 0.25);
+            border-radius: var(--radius);
+            padding: 0.2rem 0.5rem;
+            font-family: var(--mono);
+            font-size: 0.7rem;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .route-chip-num {
+            background: var(--accent);
+            color: #030d1f;
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.6rem;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .route-chip-name {
+            color: var(--text-bright);
+            max-width: 110px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .route-chip-arrow {
+            color: var(--text-dim);
+            font-size: 0.58rem;
+            flex-shrink: 0;
+        }
+
+        .btn-route-clear {
+            background: none;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 0.3rem 0.7rem;
+            font-family: var(--mono);
+            font-size: 0.72rem;
+            letter-spacing: 0.06em;
+            color: var(--text-dim);
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            flex-shrink: 0;
+            transition: all 0.15s;
+        }
+
+        .btn-route-clear:hover {
+            border-color: var(--danger);
+            color: var(--danger);
+            background: var(--danger-dim);
+        }
+
         /* ── Footer ── */
         footer {
             position: relative;
@@ -946,6 +1103,9 @@
 
         </div>
     </main>
+
+    <!-- Route Bar -->
+    <div id="routeBar" style="display:none;"></div>
 
     <!-- Footer -->
     <footer>
@@ -1206,7 +1366,9 @@
             try {
                 await recordDelete(zen);
                 locations = locations.filter(l => l.zen !== zen);
+                waypoints = waypoints.filter(w => w.zen !== zen);
                 renderCards();
+                renderRouteBar();
                 toast('Location removed', 'success');
             } catch (e) {
                 if (card) card.querySelector('.card-loading')?.remove();
@@ -1243,14 +1405,88 @@
                 const updated = await recordUpdate(zen, newName, newLoc);
                 const idx = locations.findIndex(l => l.zen === zen);
                 locations[idx] = updated;
+                const wpIdx = waypoints.findIndex(w => w.zen === zen);
+                if (wpIdx >= 0) {
+                    waypoints[wpIdx].name = updated.name;
+                    waypoints[wpIdx].location = updated.location;
+                }
                 sortLocations();
                 renderCards();
+                renderRouteBar();
                 toast('Location updated', 'success');
             } catch (e) {
                 saveBtn.disabled = false;
                 saveBtn.innerHTML = '<i class="fa-solid fa-check"></i>';
                 toast('Update failed: ' + e.message, 'error');
             }
+        }
+
+        // ── WAYPOINTS ────────────────────────────────────────────────────
+        let waypoints = []; // ordered: { zen, name, location }
+
+        function toggleWaypoint(zen) {
+            const loc = locations.find(l => l.zen === zen);
+            if (!loc) return;
+            const idx = waypoints.findIndex(w => w.zen === zen);
+            if (idx >= 0) {
+                waypoints.splice(idx, 1);
+            } else {
+                waypoints.push({ zen: loc.zen, name: loc.name, location: loc.location });
+            }
+            renderCards();
+            renderRouteBar();
+        }
+
+        function clearWaypoints() {
+            waypoints = [];
+            renderCards();
+            renderRouteBar();
+        }
+
+        function navigateTo(zen, location) {
+            const wps = waypoints.filter(w => w.zen !== zen);
+            if (wps.length === 0) {
+                window.open(mapsUrl(location), '_blank', 'noopener,noreferrer');
+                return;
+            }
+            const dest = encodeURIComponent(location);
+            const wpStr = wps.map(w => encodeURIComponent(w.location)).join('|');
+            window.open(
+                `https://www.google.com/maps/dir/?api=1&destination=${dest}&waypoints=${wpStr}`,
+                '_blank', 'noopener,noreferrer'
+            );
+        }
+
+        function renderRouteBar() {
+            const bar = document.getElementById('routeBar');
+            const toasts = document.getElementById('toastContainer');
+            if (waypoints.length === 0) {
+                bar.style.display = 'none';
+                toasts.style.bottom = '1.5rem';
+                return;
+            }
+            bar.className = 'route-bar';
+            bar.style.display = '';
+            toasts.style.bottom = '5rem';
+
+            const chips = waypoints.map((w, i) => `
+                ${i > 0 ? '<i class="fa-solid fa-arrow-right route-chip-arrow"></i>' : ''}
+                <span class="route-chip">
+                    <span class="route-chip-num">${i + 1}</span>
+                    <span class="route-chip-name">${esc(w.name)}</span>
+                </span>`).join('');
+
+            bar.innerHTML = `
+                <div class="container">
+                  <div class="route-bar-inner">
+                    <i class="fa-solid fa-route route-bar-icon"></i>
+                    <span class="route-bar-label">Route&nbsp;·&nbsp;${waypoints.length}</span>
+                    <div class="route-bar-chips">${chips}</div>
+                    <button class="btn-route-clear" onclick="clearWaypoints()">
+                        <i class="fa-solid fa-times"></i> Clear
+                    </button>
+                  </div>
+                </div>`;
         }
 
         // ── RENDER ───────────────────────────────────────────────────────
@@ -1277,6 +1513,8 @@
             }
 
             grid.innerHTML = filtered.map((l, i) => {
+                const wpIdx = waypoints.findIndex(w => w.zen === l.zen);
+                const isWaypoint = wpIdx >= 0;
                 const isPlus = isPlusCode(l.location);
                 const badge = isPlus
                     ? `<span class="card-type-badge badge-pluscode"><i class="fa-solid fa-th"></i> Plus Code</span>`
@@ -1284,15 +1522,21 @@
 
                 return `
         <div class="col-sm-6 col-lg-4">
-          <div class="loc-card" data-zen="${esc(l.zen)}" style="animation-delay:${i * 0.04}s">
+          <div class="loc-card${isWaypoint ? ' is-waypoint' : ''}" data-zen="${esc(l.zen)}" style="animation-delay:${i * 0.04}s">
+
+            <button class="btn-waypoint${isWaypoint ? ' active' : ''}"
+                    onclick="toggleWaypoint('${esc(l.zen)}')"
+                    title="${isWaypoint ? 'Remove from route' : 'Add to route'}">
+              ${isWaypoint ? wpIdx + 1 : '<i class="fa-solid fa-route"></i>'}
+            </button>
 
             <div class="view-section">
               ${badge}
               <div class="card-name" title="${esc(l.name)}">${esc(l.name)}</div>
               <div class="card-location" title="${esc(l.location)}">${esc(l.location)}</div>
-              <a class="maps-link" href="${mapsUrl(l.location)}" target="_blank" rel="noopener noreferrer">
+              <button class="maps-link" onclick="navigateTo('${esc(l.zen)}', '${esc(l.location)}')">
                 <i class="fa-solid fa-route"></i> Navigate
-              </a>
+              </button>
               <div class="card-actions">
                 <button class="btn-icon" onclick="startEdit('${esc(l.zen)}')">
                   <i class="fa-solid fa-pen"></i> Edit
