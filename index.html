@@ -558,6 +558,18 @@
             background: var(--danger-dim);
         }
 
+        .btn-icon.confirming {
+            border-color: var(--danger);
+            color: var(--danger);
+            background: var(--danger-dim);
+            animation: confirmPulse 0.55s ease infinite alternate;
+        }
+
+        @keyframes confirmPulse {
+            from { opacity: 0.75; }
+            to   { opacity: 1; }
+        }
+
         .btn-icon.success:hover {
             border-color: var(--accent);
             color: var(--accent);
@@ -1707,6 +1719,34 @@
             }
         }
 
+        // ── DELETE CONFIRMATION ───────────────────────────────────────────
+        const _delTimers = {};
+        function confirmDelete(zen) {
+            if (_delTimers[zen]) { clearTimeout(_delTimers[zen]); delete _delTimers[zen]; }
+            const card = document.querySelector(`[data-zen="${CSS.escape(zen)}"]`);
+            if (!card) return;
+            const btn = card.querySelector('.btn-delete');
+            if (!btn) return;
+            btn.classList.add('confirming');
+            btn.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Confirm?';
+            btn.onclick = () => finalizeDelete(zen);
+            _delTimers[zen] = setTimeout(() => revertDelete(zen), 3000);
+        }
+        function revertDelete(zen) {
+            delete _delTimers[zen];
+            const card = document.querySelector(`[data-zen="${CSS.escape(zen)}"]`);
+            if (!card) return;
+            const btn = card.querySelector('.btn-delete');
+            if (!btn) return;
+            btn.classList.remove('confirming');
+            btn.innerHTML = '<i class="fa-solid fa-trash-alt"></i> Delete';
+            btn.onclick = () => confirmDelete(zen);
+        }
+        function finalizeDelete(zen) {
+            if (_delTimers[zen]) { clearTimeout(_delTimers[zen]); delete _delTimers[zen]; }
+            deleteLocation(zen);
+        }
+
         // ── DELETE ───────────────────────────────────────────────────────
         async function deleteLocation(zen) {
             const card = document.querySelector(`[data-zen="${CSS.escape(zen)}"]`);
@@ -1899,7 +1939,7 @@
                 <button class="btn-icon" onclick="startEdit('${esc(l.zen)}')">
                   <i class="fa-solid fa-pen"></i> Edit
                 </button>
-                <button class="btn-icon danger" onclick="deleteLocation('${esc(l.zen)}')">
+                <button class="btn-icon danger btn-delete" onclick="confirmDelete('${esc(l.zen)}')">
                   <i class="fa-solid fa-trash-alt"></i> Delete
                 </button>
                 ${viewTag}
