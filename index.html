@@ -731,6 +731,189 @@
             color: var(--warn);
         }
 
+        /* ── Help button ── */
+        .btn-help {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-dim);
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: border-color 0.15s, color 0.15s, background 0.15s;
+            flex-shrink: 0;
+        }
+
+        .btn-help:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+            background: var(--accent-glow);
+        }
+
+        /* ── Help modal ── */
+        .help-backdrop {
+            position: fixed;
+            inset: 0;
+            z-index: 200;
+            background: rgba(4, 10, 20, 0.82);
+            backdrop-filter: blur(6px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            animation: fadeIn 0.18s ease both;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .help-panel {
+            background: var(--surface);
+            border: 1px solid var(--border-lit);
+            border-radius: var(--radius-lg);
+            width: 100%;
+            max-width: 560px;
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+            animation: panelIn 0.2s ease both;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .help-panel::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--accent), transparent);
+        }
+
+        @keyframes panelIn {
+            from { opacity: 0; transform: translateY(14px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .help-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1.1rem 1.4rem 0.9rem;
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+
+        .help-title {
+            font-family: var(--display);
+            font-size: 1.2rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--text-bright);
+            display: flex;
+            align-items: center;
+            gap: 0.55rem;
+        }
+
+        .help-title i {
+            color: var(--accent);
+            font-size: 1rem;
+        }
+
+        .btn-help-close {
+            background: none;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-dim);
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.15s;
+            flex-shrink: 0;
+        }
+
+        .btn-help-close:hover {
+            border-color: var(--danger);
+            color: var(--danger);
+            background: var(--danger-dim);
+        }
+
+        .help-body {
+            padding: 1.2rem 1.4rem 1.4rem;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1.1rem;
+        }
+
+        .help-section {
+            display: grid;
+            grid-template-columns: 2rem 1fr;
+            gap: 0.4rem 0.75rem;
+            align-items: start;
+        }
+
+        .help-section-icon {
+            grid-row: span 2;
+            width: 2rem;
+            height: 2rem;
+            background: var(--accent-glow);
+            border: 1px solid rgba(77, 168, 255, 0.2);
+            border-radius: var(--radius);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--accent);
+            font-size: 0.82rem;
+            flex-shrink: 0;
+            margin-top: 0.1rem;
+        }
+
+        .help-section-title {
+            font-family: var(--display);
+            font-size: 1rem;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            color: var(--text-bright);
+            line-height: 1.2;
+        }
+
+        .help-section-text {
+            font-family: var(--body);
+            font-size: 0.85rem;
+            color: var(--text);
+            line-height: 1.55;
+        }
+
+        .help-section-text kbd {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.2rem;
+            background: var(--card);
+            border: 1px solid var(--border-lit);
+            border-radius: 4px;
+            padding: 0.05rem 0.4rem;
+            font-family: var(--mono);
+            font-size: 0.78rem;
+            color: var(--accent);
+        }
+
+        .help-divider {
+            height: 1px;
+            background: var(--border);
+            margin: 0;
+        }
+
         /* ── Share bar ── */
         .share-bar {
             display: flex;
@@ -1039,6 +1222,9 @@
                 iaggio<em>travel</em>
             </div>
             <div class="header-meta">
+                <button class="btn-help" onclick="openHelpModal()" title="How to use">
+                    <i class="fa-solid fa-circle-question"></i>
+                </button>
                 <div class="view-config">
                     <i class="fa-solid fa-folder-open view-config-icon"></i>
                     <input id="configNameInput" type="text" class="view-input" placeholder="home"
@@ -1109,6 +1295,73 @@
 
         </div>
     </main>
+
+    <!-- Help Modal -->
+    <div id="helpModal" class="help-backdrop" style="display:none;" onclick="onBackdropClick(event)">
+        <div class="help-panel">
+            <div class="help-header">
+                <span class="help-title"><i class="fa-solid fa-circle-question"></i> How to Use</span>
+                <button class="btn-help-close" onclick="closeHelpModal()"><i class="fa-solid fa-times"></i></button>
+            </div>
+            <div class="help-body">
+
+                <div class="help-section">
+                    <div class="help-section-icon"><i class="fa-solid fa-folder-open"></i></div>
+                    <div class="help-section-title">Views</div>
+                    <div class="help-section-text">The folder input in the header controls your active <em>view</em> — a named group of locations. The default <kbd>home</kbd> view saves data locally in your browser. Type any other name and press <kbd><i class="fa-solid fa-arrow-right"></i></kbd> to switch to a cloud-synced view accessible at <kbd>?v=name</kbd>.</div>
+                </div>
+
+                <div class="help-divider"></div>
+
+                <div class="help-section">
+                    <div class="help-section-icon"><i class="fa-solid fa-location-dot"></i></div>
+                    <div class="help-section-title">Adding a Location</div>
+                    <div class="help-section-text">Enter a <strong>Name</strong> and an <strong>Address</strong> or <strong>Plus Code</strong>, then click <kbd><i class="fa-solid fa-plus"></i> Add</kbd>. Use the <kbd><i class="fa-solid fa-map-location-dot"></i></kbd> Test button to open the address in Google Maps and verify it before saving.</div>
+                </div>
+
+                <div class="help-divider"></div>
+
+                <div class="help-section">
+                    <div class="help-section-icon"><i class="fa-solid fa-route"></i></div>
+                    <div class="help-section-title">Navigating</div>
+                    <div class="help-section-text">Click <kbd><i class="fa-solid fa-route"></i> Navigate</kbd> on any card to open that location directly in Google Maps. If you have waypoints selected (see below), that location becomes the <strong>destination</strong> and the waypoints form the route in order.</div>
+                </div>
+
+                <div class="help-divider"></div>
+
+                <div class="help-section">
+                    <div class="help-section-icon"><i class="fa-solid fa-map-signs"></i></div>
+                    <div class="help-section-title">Multi-Stop Routes</div>
+                    <div class="help-section-text">Click the circular <kbd><i class="fa-solid fa-route"></i></kbd> toggle in the top-right of each card to add it as a waypoint. Cards are numbered in the order you select them. A route bar appears at the bottom showing the sequence. Hit <kbd><i class="fa-solid fa-route"></i> Navigate</kbd> on any card to set it as the destination and launch the full route in Google Maps. Click <kbd>Clear</kbd> in the route bar to reset.</div>
+                </div>
+
+                <div class="help-divider"></div>
+
+                <div class="help-section">
+                    <div class="help-section-icon"><i class="fa-solid fa-pen"></i></div>
+                    <div class="help-section-title">Editing &amp; Deleting</div>
+                    <div class="help-section-text">Each card has an <kbd><i class="fa-solid fa-pen"></i> Edit</kbd> button to update its name or location inline, and a <kbd><i class="fa-solid fa-trash-alt"></i> Delete</kbd> button to remove it permanently.</div>
+                </div>
+
+                <div class="help-divider"></div>
+
+                <div class="help-section">
+                    <div class="help-section-icon"><i class="fa-solid fa-magnifying-glass"></i></div>
+                    <div class="help-section-title">Searching</div>
+                    <div class="help-section-text">The filter bar above the cards searches across both location names and addresses in real time. Cards not matching the query are hidden until you clear the search.</div>
+                </div>
+
+                <div class="help-divider"></div>
+
+                <div class="help-section">
+                    <div class="help-section-icon"><i class="fa-solid fa-link"></i></div>
+                    <div class="help-section-title">Sharing a View</div>
+                    <div class="help-section-text">On any named view (not <kbd>home</kbd>), a short link is automatically generated near the top of the page. Click <kbd><i class="fa-regular fa-copy"></i> Copy</kbd> to copy it to your clipboard and share it with others.</div>
+                </div>
+
+            </div>
+        </div>
+    </div>
 
     <!-- Route Bar -->
     <div id="routeBar" style="display:none;"></div>
@@ -1641,6 +1894,27 @@
                 }, 2000);
             });
         }
+
+        // ── HELP MODAL ───────────────────────────────────────────────────
+        function openHelpModal() {
+            const m = document.getElementById('helpModal');
+            m.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeHelpModal() {
+            const m = document.getElementById('helpModal');
+            m.style.display = 'none';
+            document.body.style.overflow = '';
+        }
+
+        function onBackdropClick(e) {
+            if (e.target === document.getElementById('helpModal')) closeHelpModal();
+        }
+
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape') closeHelpModal();
+        });
 
         // ── INIT ─────────────────────────────────────────────────────────
         document.getElementById('footerYear').textContent = new Date().getFullYear();
