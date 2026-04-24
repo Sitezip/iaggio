@@ -1149,6 +1149,22 @@
             background: var(--danger-dim);
         }
 
+        /* ── Multi-view source tag ── */
+        .card-view-tag {
+            margin-left: auto;
+            font-family: var(--mono);
+            font-size: 0.6rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--text-dim);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 90px;
+            align-self: center;
+            opacity: 0.75;
+        }
+
         /* ── Footer ── */
         footer {
             position: relative;
@@ -1385,14 +1401,23 @@
         const _urlParams = new URLSearchParams(window.location.search);
         const _urlName = (_urlParams.get('v') || '').trim();
 
+        // Support || delimiter for multiple view names (e.g. ?v=office||warehouse)
+        const _parsedNames = _urlName
+            ? _urlName.split('||')
+                .map(s => s.trim().toLowerCase().replace(/[^a-z0-9_-]/g, ''))
+                .filter(Boolean)
+            : [];
+
         const CONFIG = {
             baseUrl: 'https://zzzap.io',
             group: 'iaggio.com',
-            name: _urlName || 'home'
+            name: _parsedNames[0] || 'home',          // primary name (used for adds)
+            names: _parsedNames.length > 0 ? _parsedNames : ['home']
         };
 
-        // When name is "home", use localStorage instead of the API
-        const USE_LOCAL = CONFIG.name === 'home';
+        // localStorage mode only when the single active view is "home"
+        const USE_LOCAL = CONFIG.names.length === 1 && CONFIG.names[0] === 'home';
+        const MULTI_VIEW = CONFIG.names.length > 1;
         const LS_KEY = 'iaggio_locs_home';
 
         // ── STATE ───────────────────────────────────────────────────────
@@ -1401,7 +1426,9 @@
         // ── VIEW NAME UI ─────────────────────────────────────────────────
         function initViewInput() {
             const input = document.getElementById('configNameInput');
-            input.value = CONFIG.name;
+            input.value = CONFIG.names.join('||');
+            // Widen the input when multiple names are present
+            if (MULTI_VIEW) input.style.width = '140px';
             input.addEventListener('keydown', e => {
                 if (e.key === 'Enter') applyConfigName();
             });
@@ -1409,15 +1436,21 @@
 
         function applyConfigName() {
             const input = document.getElementById('configNameInput');
-            const newName = input.value.trim().toLowerCase().replace(/[^a-z0-9_-]/g, '');
-            if (!newName || newName === CONFIG.name) {
-                input.value = CONFIG.name;
-                return;
-            }
-            if (newName === 'home') {
+            // Parse the raw value, allowing || separators
+            const names = input.value.trim()
+                .split('||')
+                .map(s => s.trim().toLowerCase().replace(/[^a-z0-9_-]/g, ''))
+                .filter(Boolean);
+
+            if (names.length === 0) { input.value = CONFIG.names.join('||'); return; }
+
+            const joined = names.join('||');
+            if (joined === CONFIG.names.join('||')) return;
+
+            if (names.length === 1 && names[0] === 'home') {
                 window.location.href = window.location.pathname;
             } else {
-                window.location.href = window.location.pathname + '?v=' + encodeURIComponent(newName);
+                window.location.href = window.location.pathname + '?v=' + encodeURIComponent(joined);
             }
         }
 
@@ -1462,11 +1495,11 @@
             return data;
         }
 
-        async function zenGet() {
+        async function zenGet(viewName) {
             const data = await apiGet(
-                `/Collections/zenGet?group=${encodeURIComponent(CONFIG.group)}&name=${encodeURIComponent(CONFIG.name)}&limit=100`
+                `/Collections/zenGet?group=${encodeURIComponent(CONFIG.group)}&name=${encodeURIComponent(viewName)}&limit=100`
             );
-            return (data.response || []).map(r => ({ id: r.id, name: r.name, location: r.location, zen: r.zen }));
+            return (data.response || []).map(r => ({ id: r.id, name: r.name, location: r.location, zen: r.zen, viewName }));
         }
 
         async function zenPost(record) {
@@ -1475,7 +1508,7 @@
                 `/Collections/zenPost?group=${encodeURIComponent(CONFIG.group)}&name=${encodeURIComponent(CONFIG.name)}&json=${json}`
             );
             const r = data.response[0];
-            return { id: r.id, name: r.name, location: r.location, zen: r.zen };
+            return { id: r.id, name: r.name, location: r.location, zen: r.zen, viewName: CONFIG.name };
         }
 
         async function zenPut(zen, record) {
@@ -1484,7 +1517,8 @@
                 `/Collections/zenPut?zen=${encodeURIComponent(zen)}&json=${json}`
             );
             const r = data.response[0];
-            return { id: r.id, name: r.name, location: r.location, zen: r.zen };
+            const src = locations.find(l => l.zen === zen)?.viewName || CONFIG.name;
+            return { id: r.id, name: r.name, location: r.location, zen: r.zen, viewName: src };
         }
 
         async function zenDelete(zen) {
@@ -1526,7 +1560,7 @@
         // ── LOAD ─────────────────────────────────────────────────────────
         async function loadLocations() {
             if (USE_LOCAL) {
-                locations = getLocalLocs();
+                locations = getLocalLocs().map(l => ({ ...l, viewName: 'home' }));
                 sortLocations();
                 renderCards();
                 return;
@@ -1541,9 +1575,20 @@
         </div>
       </div>`;
             try {
-                locations = await zenGet();
+                const results = await Promise.allSettled(
+                    CONFIG.names.map(n =>
+                        n === 'home'
+                            ? Promise.resolve(getLocalLocs().map(l => ({ ...l, viewName: 'home' })))
+                            : zenGet(n)
+                    )
+                );
+                const failed = results.filter(r => r.status === 'rejected');
+                locations = results
+                    .filter(r => r.status === 'fulfilled')
+                    .flatMap(r => r.value);
                 sortLocations();
                 renderCards();
+                if (failed.length) toast(`${failed.length} view(s) failed to load`, 'warning');
             } catch (e) {
                 grid.innerHTML = '';
                 toast('Failed to load locations: ' + e.message, 'error');
@@ -1775,6 +1820,9 @@
                 const wpIdx = waypoints.findIndex(w => w.zen === l.zen);
                 const isWaypoint = wpIdx >= 0;
                 const isPlus = isPlusCode(l.location);
+                const viewTag = MULTI_VIEW
+                    ? `<span class="card-view-tag" title="${esc(l.viewName)}">${esc(l.viewName)}</span>`
+                    : '';
                 const badge = isPlus
                     ? `<span class="card-type-badge badge-pluscode"><i class="fa-solid fa-th"></i> Plus Code</span>`
                     : `<span class="card-type-badge badge-address"><i class="fa-solid fa-map-marker-alt"></i> Address</span>`;
@@ -1803,6 +1851,7 @@
                 <button class="btn-icon danger" onclick="deleteLocation('${esc(l.zen)}')">
                   <i class="fa-solid fa-trash-alt"></i> Delete
                 </button>
+                ${viewTag}
               </div>
             </div>
 
