@@ -494,7 +494,6 @@
             overflow: hidden;
             text-overflow: ellipsis;
             line-height: 1.5;
-            margin-bottom: 1.2rem;
         }
 
         .maps-link {
@@ -515,6 +514,7 @@
             background: var(--accent-glow);
             transition: background 0.15s, border-color 0.15s, color 0.15s, box-shadow 0.15s;
             width: 100%;
+            margin-top: 1.2rem;
         }
 
         .maps-link:hover {
@@ -1149,6 +1149,29 @@
             background: var(--danger-dim);
         }
 
+        /* ── Card note ── */
+        .card-note {
+            font-family: var(--body);
+            font-size: 0.82rem;
+            color: var(--text);
+            line-height: 1.45;
+            font-style: italic;
+            opacity: 0.88;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .form-label-optional {
+            font-size: 0.62rem;
+            color: var(--text-dim);
+            letter-spacing: 0.08em;
+            font-style: normal;
+            text-transform: none;
+        }
+
         /* ── Multi-view source tag ── */
         .card-view-tag {
             margin-left: auto;
@@ -1242,7 +1265,7 @@
                     <i class="fa-solid fa-circle-question"></i>
                 </button>
                 <div class="view-config">
-                    <i class="fa-solid fa-folder-open view-config-icon"></i>
+                    <i class="fa-solid fa-eye view-config-icon"></i>
                     <input id="configNameInput" type="text" class="view-input" placeholder="home"
                         title="Enter a view name and press Enter to switch" />
                     <button class="btn-view-go" onclick="applyConfigName()" title="Switch view">
@@ -1291,6 +1314,17 @@
                         </div>
                     </div>
                 </div>
+                <div class="row g-2 mt-2">
+                    <div class="col-md-8">
+                        <label class="form-label">Note <span class="form-label-optional">(optional · 128 chars)</span></label>
+                        <input id="inNote" type="text" class="form-control"
+                            placeholder="Short note…" maxlength="128" />
+                    </div>
+                    <div class="col-md-4" id="targetViewCol" style="display:none;">
+                        <label class="form-label">Save to View</label>
+                        <select id="inTargetView" class="form-control"></select>
+                    </div>
+                </div>
                 <div id="formError" class="form-error"></div>
             </div>
 
@@ -1322,7 +1356,7 @@
             <div class="help-body">
 
                 <div class="help-section">
-                    <div class="help-section-icon"><i class="fa-solid fa-folder-open"></i></div>
+                    <div class="help-section-icon"><i class="fa-solid fa-eye"></i></div>
                     <div class="help-section-title">Views</div>
                     <div class="help-section-text">The folder input in the header controls your active <em>view</em> — a named group of locations. The default <kbd>home</kbd> view saves data locally in your browser. Type any other name and press <kbd><i class="fa-solid fa-arrow-right"></i></kbd> to switch to a cloud-synced view accessible at <kbd>?v=name</kbd>.</div>
                 </div>
@@ -1499,26 +1533,34 @@
             const data = await apiGet(
                 `/Collections/zenGet?group=${encodeURIComponent(CONFIG.group)}&name=${encodeURIComponent(viewName)}&limit=100`
             );
-            return (data.response || []).map(r => ({ id: r.id, name: r.name, location: r.location, zen: r.zen, viewName }));
+            return (data.response || []).map(r => ({
+                id: r.id, name: r.name, location: r.location,
+                note: r.note || '', zen: r.zen, viewName
+            }));
         }
 
-        async function zenPost(record) {
-            const json = encodeURIComponent(JSON.stringify({ id: record.id, name: record.name, location: record.location }));
+        async function zenPost(record, targetView) {
+            const vn = targetView || CONFIG.name;
+            const json = encodeURIComponent(JSON.stringify({
+                id: record.id, name: record.name, location: record.location, note: record.note || ''
+            }));
             const data = await apiGet(
-                `/Collections/zenPost?group=${encodeURIComponent(CONFIG.group)}&name=${encodeURIComponent(CONFIG.name)}&json=${json}`
+                `/Collections/zenPost?group=${encodeURIComponent(CONFIG.group)}&name=${encodeURIComponent(vn)}&json=${json}`
             );
             const r = data.response[0];
-            return { id: r.id, name: r.name, location: r.location, zen: r.zen, viewName: CONFIG.name };
+            return { id: r.id, name: r.name, location: r.location, note: r.note || '', zen: r.zen, viewName: vn };
         }
 
         async function zenPut(zen, record) {
-            const json = encodeURIComponent(JSON.stringify({ id: record.id, name: record.name, location: record.location }));
+            const json = encodeURIComponent(JSON.stringify({
+                id: record.id, name: record.name, location: record.location, note: record.note || ''
+            }));
             const data = await apiGet(
                 `/Collections/zenPut?zen=${encodeURIComponent(zen)}&json=${json}`
             );
             const r = data.response[0];
             const src = locations.find(l => l.zen === zen)?.viewName || CONFIG.name;
-            return { id: r.id, name: r.name, location: r.location, zen: r.zen, viewName: src };
+            return { id: r.id, name: r.name, location: r.location, note: r.note || '', zen: r.zen, viewName: src };
         }
 
         async function zenDelete(zen) {
@@ -1526,27 +1568,28 @@
         }
 
         // ── CRUD DISPATCH ────────────────────────────────────────────────
-        async function recordAdd(name, location) {
-            if (USE_LOCAL) {
-                const record = { id: uid(), name, location, zen: uid() };
+        async function recordAdd(name, location, note, targetView) {
+            const cleanNote = stripHtml(note);
+            if (USE_LOCAL || targetView === 'home') {
+                const record = { id: uid(), name, location, note: cleanNote, zen: uid(), viewName: 'home' };
                 const locs = getLocalLocs();
                 locs.push(record);
                 saveLocalLocs(locs);
                 return record;
             }
-            return await zenPost({ id: uid(), name, location });
+            return await zenPost({ id: uid(), name, location, note: cleanNote }, targetView);
         }
 
-        async function recordUpdate(zen, name, location) {
+        async function recordUpdate(zen, name, location, note) {
             const rec = locations.find(l => l.zen === zen);
             if (!rec) throw new Error('Record not found');
-            if (USE_LOCAL) {
-                rec.name = name;
-                rec.location = location;
+            const cleanNote = stripHtml(note);
+            if (USE_LOCAL || rec.viewName === 'home') {
+                rec.name = name; rec.location = location; rec.note = cleanNote;
                 saveLocalLocs(locations);
                 return { ...rec };
             }
-            return await zenPut(zen, { id: rec.id, name, location });
+            return await zenPut(zen, { id: rec.id, name, location, note: cleanNote });
         }
 
         async function recordDelete(zen) {
@@ -1619,11 +1662,16 @@
         async function addLocation() {
             const nameEl = document.getElementById('inName');
             const locEl = document.getElementById('inLocation');
+            const noteEl = document.getElementById('inNote');
             const errEl = document.getElementById('formError');
             const btnAdd = document.getElementById('btnAdd');
 
             const name = nameEl.value.trim();
             const location = locEl.value.trim();
+            const note = noteEl.value;
+            const targetView = MULTI_VIEW
+                ? document.getElementById('inTargetView').value
+                : CONFIG.name;
 
             if (!name || !location) {
                 errEl.textContent = 'Both name and location are required.';
@@ -1643,11 +1691,12 @@
             btnAdd.innerHTML = '<span class="spinner" style="width:14px;height:14px;border-width:2px;display:inline-block;"></span> Saving…';
 
             try {
-                const saved = await recordAdd(name, location);
+                const saved = await recordAdd(name, location, note, targetView);
                 locations.push(saved);
                 sortLocations();
                 nameEl.value = '';
                 locEl.value = '';
+                noteEl.value = '';
                 renderCards();
                 toast('Location saved', 'success');
             } catch (e) {
@@ -1698,6 +1747,7 @@
             const card = document.querySelector(`[data-zen="${CSS.escape(zen)}"]`);
             const newName = card.querySelector('.edit-name').value.trim();
             const newLoc = card.querySelector('.edit-loc').value.trim();
+            const newNote = card.querySelector('.edit-note').value;
 
             if (!newName || !newLoc) return;
 
@@ -1706,7 +1756,7 @@
             saveBtn.innerHTML = '<span class="spinner" style="width:12px;height:12px;border-width:2px;display:inline-block;"></span>';
 
             try {
-                const updated = await recordUpdate(zen, newName, newLoc);
+                const updated = await recordUpdate(zen, newName, newLoc, newNote);
                 const idx = locations.findIndex(l => l.zen === zen);
                 locations[idx] = updated;
                 const wpIdx = waypoints.findIndex(w => w.zen === zen);
@@ -1841,6 +1891,7 @@
               ${badge}
               <div class="card-name" title="${esc(l.name)}">${esc(l.name)}</div>
               <div class="card-location" title="${esc(l.location)}">${esc(l.location)}</div>
+              ${l.note ? `<div class="card-note">${esc(l.note)}</div>` : ''}
               <button class="maps-link" onclick="navigateTo('${esc(l.zen)}', '${esc(l.location)}')">
                 <i class="fa-solid fa-route"></i> Navigate
               </button>
@@ -1858,6 +1909,7 @@
             <div class="edit-form">
               <input class="form-control edit-name" value="${esc(l.name)}" placeholder="Name"/>
               <input class="form-control edit-loc"  value="${esc(l.location)}" placeholder="Address or Plus Code"/>
+              <input class="form-control edit-note" value="${esc(l.note || '')}" placeholder="Note (optional · 128 chars)" maxlength="128"/>
               <div class="edit-actions">
                 <button class="btn-icon success btn-save-edit" onclick="saveEdit('${esc(l.zen)}')">
                   <i class="fa-solid fa-check"></i> Save
@@ -1891,8 +1943,12 @@
                 .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
         }
 
+        function stripHtml(str) {
+            return String(str || '').replace(/<[^>]*>/g, '').trim().slice(0, 128);
+        }
+
         // ── ENTER KEY ────────────────────────────────────────────────────
-        ['inName', 'inLocation'].forEach(id => {
+        ['inName', 'inLocation', 'inNote'].forEach(id => {
             document.getElementById(id).addEventListener('keydown', e => {
                 if (e.key === 'Enter') addLocation();
             });
@@ -1968,6 +2024,14 @@
         // ── INIT ─────────────────────────────────────────────────────────
         document.getElementById('footerYear').textContent = new Date().getFullYear();
         initViewInput();
+
+        if (MULTI_VIEW) {
+            const col = document.getElementById('targetViewCol');
+            col.style.display = '';
+            document.getElementById('inTargetView').innerHTML =
+                CONFIG.names.map(n => `<option value="${esc(n)}">${esc(n)}</option>`).join('');
+        }
+
         if (!USE_LOCAL) loadShortLink();
         loadLocations();
     </script>
