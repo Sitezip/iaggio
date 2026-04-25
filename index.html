@@ -1448,18 +1448,29 @@
                     <i class="fa-solid fa-location-dot"></i> New Location
                 </div>
                 <div class="row g-2 align-items-end">
-                    <div class="col-md-4">
+                    <div class="col-12 col-md-4">
                         <label class="form-label">Name</label>
                         <input id="inName" type="text" class="form-control"
                             placeholder="e.g. Warehouse 3, Site Alpha"
                             oninput="this.value=this.value.replace(/--/g,'-')" />
                     </div>
-                    <div class="col-md-5">
+                    <div class="col-12 col-md-8">
                         <label class="form-label">Address or Plus Code</label>
                         <input id="inLocation" type="text" class="form-control"
                             placeholder="e.g. 123 Main St  or  8FW4V75Q+8Q" />
                     </div>
-                    <div class="col-md-3">
+                </div>
+                <div class="row g-2 mt-2 align-items-end">
+                    <div class="col-12 col-md">
+                        <label class="form-label">Note <span class="form-label-optional">(optional · 128 chars)</span></label>
+                        <input id="inNote" type="text" class="form-control"
+                            placeholder="Short note…" maxlength="128" />
+                    </div>
+                    <div class="col-12 col-md-3" id="targetViewCol" style="display:none;">
+                        <label class="form-label">Save to View</label>
+                        <select id="inTargetView" class="form-control"></select>
+                    </div>
+                    <div class="col-12 col-md-auto">
                         <div class="d-flex gap-2">
                             <button id="btnAdd" class="btn-primary-custom flex-fill" onclick="addLocation()">
                                 <i class="fa-solid fa-plus"></i> Add
@@ -1468,17 +1479,6 @@
                                 <i class="fa-solid fa-map-location-dot"></i><span class="btn-test-label"> Test</span>
                             </button>
                         </div>
-                    </div>
-                </div>
-                <div class="row g-2 mt-2">
-                    <div class="col-md-8">
-                        <label class="form-label">Note <span class="form-label-optional">(optional · 128 chars)</span></label>
-                        <input id="inNote" type="text" class="form-control"
-                            placeholder="Short note…" maxlength="128" />
-                    </div>
-                    <div class="col-md-4" id="targetViewCol" style="display:none;">
-                        <label class="form-label">Save to View</label>
-                        <select id="inTargetView" class="form-control"></select>
                     </div>
                 </div>
                 <div id="formError" class="form-error"></div>
