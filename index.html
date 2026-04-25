@@ -1385,7 +1385,8 @@
                     <div class="col-md-4">
                         <label class="form-label">Name</label>
                         <input id="inName" type="text" class="form-control"
-                            placeholder="e.g. Warehouse 3, Site Alpha" />
+                            placeholder="e.g. Warehouse 3, Site Alpha"
+                            oninput="this.value=this.value.replace(/--/g,'-')" />
                     </div>
                     <div class="col-md-5">
                         <label class="form-label">Address or Plus Code</label>
@@ -1528,7 +1529,7 @@
         // |  = hierarchical path (full v value is the single collection name; | used for breadcrumbs only)
         const MULTI_VIEW = _urlName.includes('||');
         const USE_LOCAL  = !_urlName;
-        const HIER_VIEW  = !MULTI_VIEW && _urlName.includes('|');
+        const HIER_VIEW  = !MULTI_VIEW && _urlName.includes('--');
 
         // The collection name used for all CRUD — the full v param for single views,
         // or per-selection for multi-view (inTargetView)
@@ -1760,6 +1761,12 @@
                 return;
             }
 
+            if (name.includes('--')) {
+                errEl.textContent = 'Name cannot contain a double dash (--).'
+                errEl.style.display = 'block';
+                return;
+            }
+
             if (!locationIsValid(location)) {
                 errEl.textContent = 'The Plus Code format is invalid — check the code and try again.';
                 errEl.style.display = 'block';
@@ -1987,7 +1994,7 @@
                     : `<span class="card-type-badge badge-address"><i class="fa-solid fa-map-marker-alt"></i> Address</span>`;
                 const _svName = (!USE_LOCAL && !MULTI_VIEW) ? sanitizeViewName(l.name) : '';
                 const subViewBtn = _svName
-                    ? `<a class="btn-subview" href="?v=${encodeURIComponent(_viewLabel + '|' + _svName)}" title="Open sub-view: ${esc(_svName)}"><i class="fa-solid fa-arrow-down"></i></a>`
+                    ? `<a class="btn-subview" href="?v=${encodeURIComponent(_viewLabel + '--' + _svName)}" title="Open sub-view: ${esc(_svName)}"><i class="fa-solid fa-arrow-down"></i></a>`
                     : '';
 
                 return `
@@ -2144,9 +2151,9 @@
         function renderBreadcrumb() {
             const el = document.getElementById('breadcrumbBar');
             if (!HIER_VIEW) { el.style.display = 'none'; return; }
-            const parts = _urlName.split('|');
+            const parts = _urlName.split('--');
             const items = parts.map((seg, i) => {
-                const pathToHere = parts.slice(0, i + 1).join('|');
+                const pathToHere = parts.slice(0, i + 1).join('--');
                 if (i === parts.length - 1) {
                     return `<span class="bc-current">${esc(seg)}</span>`;
                 }
