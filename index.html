@@ -1200,6 +1200,80 @@
             opacity: 0.75;
         }
 
+        /* ── Breadcrumb nav ── */
+        .breadcrumb-bar {
+            display: flex;
+            align-items: center;
+            gap: 0.45rem;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 0.45rem 0.9rem;
+            margin-bottom: 0.9rem;
+            flex-wrap: wrap;
+        }
+
+        .bc-icon {
+            color: var(--text-dim);
+            font-size: 0.68rem;
+            flex-shrink: 0;
+            margin-right: 0.2rem;
+        }
+
+        .bc-link {
+            color: var(--accent);
+            font-family: var(--mono);
+            font-size: 0.75rem;
+            letter-spacing: 0.06em;
+            text-decoration: none;
+        }
+
+        .bc-link:hover {
+            text-decoration: underline;
+            color: var(--text-bright);
+        }
+
+        .bc-sep {
+            color: var(--text-dim);
+            font-size: 0.55rem;
+        }
+
+        .bc-current {
+            color: var(--text-bright);
+            font-family: var(--mono);
+            font-size: 0.75rem;
+            letter-spacing: 0.06em;
+        }
+
+        /* ── Sub-view drill-down button on card ── */
+        .btn-subview {
+            position: absolute;
+            top: 0.85rem;
+            right: 2.85rem;
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            border: 1px solid var(--border);
+            background: var(--bg2);
+            color: var(--text-dim);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.65rem;
+            font-family: var(--mono);
+            font-weight: 700;
+            line-height: 1;
+            transition: all 0.15s;
+            z-index: 2;
+        }
+
+        .btn-subview:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+            background: var(--accent-glow);
+        }
+
         /* ── Footer ── */
         footer {
             position: relative;
@@ -1295,6 +1369,9 @@
     <!-- Main -->
     <main>
         <div class="container">
+
+            <!-- Breadcrumb nav (hierarchical sub-view path only) -->
+            <div id="breadcrumbBar" style="display:none;"></div>
 
             <!-- Share Bar (non-home views only) -->
             <div id="shareBar" style="display:none;"></div>
@@ -1447,23 +1524,26 @@
         const _urlParams = new URLSearchParams(window.location.search);
         const _urlName = (_urlParams.get('v') || '').trim();
 
-        // Support || delimiter for multiple view names (e.g. ?v=office||warehouse)
-        const _parsedNames = _urlName
-            ? _urlName.split('||')
-                .map(s => s.trim().toLowerCase().replace(/[^a-z0-9_-]/g, ''))
-                .filter(Boolean)
-            : [];
+        // || = parallel multi-view (each segment is an independent collection name)
+        // |  = hierarchical path (full v value is the single collection name; | used for breadcrumbs only)
+        const MULTI_VIEW = _urlName.includes('||');
+        const USE_LOCAL  = !_urlName;
+        const HIER_VIEW  = !MULTI_VIEW && _urlName.includes('|');
+
+        // The collection name used for all CRUD — the full v param for single views,
+        // or per-selection for multi-view (inTargetView)
+        const _viewLabel = _urlName || 'home';
 
         const CONFIG = {
             baseUrl: 'https://zzzap.io',
             group: 'iaggio.com',
-            name: _parsedNames[0] || 'home',          // primary name (used for adds)
-            names: _parsedNames.length > 0 ? _parsedNames : ['home']
+            // multi-view: individual sanitized names for load + dropdown
+            // single view: [_viewLabel] so loadLocations works uniformly
+            names: MULTI_VIEW
+                ? _urlName.split('||').map(s => s.trim().slice(0, 128)).filter(Boolean)
+                : [_viewLabel]
         };
 
-        // localStorage mode only when the single active view is "home"
-        const USE_LOCAL = CONFIG.names.length === 1 && CONFIG.names[0] === 'home';
-        const MULTI_VIEW = CONFIG.names.length > 1;
         const LS_KEY = 'iaggio_locs_home';
 
         // ── STATE ───────────────────────────────────────────────────────
@@ -1472,32 +1552,19 @@
         // ── VIEW NAME UI ─────────────────────────────────────────────────
         function initViewInput() {
             const input = document.getElementById('configNameInput');
-            input.value = CONFIG.names.join('||');
-            // Widen the input when multiple names are present
-            if (MULTI_VIEW) input.style.width = '140px';
+            input.value = _urlName;
+            if (MULTI_VIEW || HIER_VIEW) input.style.width = '140px';
             input.addEventListener('keydown', e => {
                 if (e.key === 'Enter') applyConfigName();
             });
         }
 
         function applyConfigName() {
-            const input = document.getElementById('configNameInput');
-            // Parse the raw value, allowing || separators
-            const names = input.value.trim()
-                .split('||')
-                .map(s => s.trim().toLowerCase().replace(/[^a-z0-9_-]/g, ''))
-                .filter(Boolean);
-
-            if (names.length === 0) { input.value = CONFIG.names.join('||'); return; }
-
-            const joined = names.join('||');
-            if (joined === CONFIG.names.join('||')) return;
-
-            if (names.length === 1 && names[0] === 'home') {
-                window.location.href = window.location.pathname;
-            } else {
-                window.location.href = window.location.pathname + '?v=' + encodeURIComponent(joined);
-            }
+            const val = document.getElementById('configNameInput').value.trim();
+            if (val === _urlName) return;
+            window.location.href = (!val || val.toLowerCase() === 'home')
+                ? window.location.pathname
+                : window.location.pathname + '?v=' + encodeURIComponent(val);
         }
 
         // ── PLUS CODE DETECTION ─────────────────────────────────────────
@@ -1552,7 +1619,7 @@
         }
 
         async function zenPost(record, targetView) {
-            const vn = targetView || CONFIG.name;
+            const vn = targetView || _viewLabel;
             const json = encodeURIComponent(JSON.stringify({
                 id: record.id, name: record.name, location: record.location, note: record.note || ''
             }));
@@ -1560,7 +1627,7 @@
                 `/Collections/zenPost?group=${encodeURIComponent(CONFIG.group)}&name=${encodeURIComponent(vn)}&json=${json}`
             );
             const r = data.response[0];
-            return { id: r.id, name: r.name, location: r.location, note: r.note || '', zen: r.zen, viewName: vn };
+            return { id: r.id, name: r.name, location: r.location, note: r.note || '', zen: r.zen, viewName: MULTI_VIEW ? vn : _viewLabel };
         }
 
         async function zenPut(zen, record) {
@@ -1571,7 +1638,7 @@
                 `/Collections/zenPut?zen=${encodeURIComponent(zen)}&json=${json}`
             );
             const r = data.response[0];
-            const src = locations.find(l => l.zen === zen)?.viewName || CONFIG.name;
+            const src = locations.find(l => l.zen === zen)?.viewName || _viewLabel;
             return { id: r.id, name: r.name, location: r.location, note: r.note || '', zen: r.zen, viewName: src };
         }
 
@@ -1634,7 +1701,9 @@
                     CONFIG.names.map(n =>
                         n === 'home'
                             ? Promise.resolve(getLocalLocs().map(l => ({ ...l, viewName: 'home' })))
-                            : zenGet(n)
+                            : zenGet(MULTI_VIEW ? n : _viewLabel).then(recs =>
+                                MULTI_VIEW ? recs : recs.map(r => ({ ...r, viewName: _viewLabel }))
+                              )
                     )
                 );
                 const failed = results.filter(r => r.status === 'rejected');
@@ -1683,7 +1752,7 @@
             const note = noteEl.value;
             const targetView = MULTI_VIEW
                 ? document.getElementById('inTargetView').value
-                : CONFIG.name;
+                : _viewLabel;
 
             if (!name || !location) {
                 errEl.textContent = 'Both name and location are required.';
@@ -1916,6 +1985,10 @@
                 const badge = isPlus
                     ? `<span class="card-type-badge badge-pluscode"><i class="fa-solid fa-th"></i> Plus Code</span>`
                     : `<span class="card-type-badge badge-address"><i class="fa-solid fa-map-marker-alt"></i> Address</span>`;
+                const _svName = (!USE_LOCAL && !MULTI_VIEW) ? sanitizeViewName(l.name) : '';
+                const subViewBtn = _svName
+                    ? `<a class="btn-subview" href="?v=${encodeURIComponent(_viewLabel + '|' + _svName)}" title="Open sub-view: ${esc(_svName)}"><i class="fa-solid fa-arrow-down"></i></a>`
+                    : '';
 
                 return `
         <div class="col-sm-6 col-lg-4">
@@ -1926,6 +1999,7 @@
                     title="${isWaypoint ? 'Remove from route' : 'Add to route'}">
               ${isWaypoint ? wpIdx + 1 : '<i class="fa-solid fa-route"></i>'}
             </button>
+            ${subViewBtn}
 
             <div class="view-section">
               ${badge}
@@ -1985,6 +2059,11 @@
 
         function stripHtml(str) {
             return String(str || '').replace(/<[^>]*>/g, '').trim().slice(0, 128);
+        }
+
+        function sanitizeViewName(str) {
+            return str;
+            //return String(str || '').toLowerCase().replace(/[^a-z0-9_-]/g, '').slice(0, 128);
         }
 
         // ── ENTER KEY ────────────────────────────────────────────────────
@@ -2061,9 +2140,27 @@
             if (e.key === 'Escape') closeHelpModal();
         });
 
+        // ── BREADCRUMB ───────────────────────────────────────────────────
+        function renderBreadcrumb() {
+            const el = document.getElementById('breadcrumbBar');
+            if (!HIER_VIEW) { el.style.display = 'none'; return; }
+            const parts = _urlName.split('|');
+            const items = parts.map((seg, i) => {
+                const pathToHere = parts.slice(0, i + 1).join('|');
+                if (i === parts.length - 1) {
+                    return `<span class="bc-current">${esc(seg)}</span>`;
+                }
+                return `<a class="bc-link" href="?v=${encodeURIComponent(pathToHere)}">${esc(seg)}</a>`;
+            }).join('<i class="fa-solid fa-chevron-right bc-sep"></i>');
+            el.className = 'breadcrumb-bar';
+            el.innerHTML = `<i class="fa-solid fa-sitemap bc-icon"></i>${items}`;
+            el.style.display = '';
+        }
+
         // ── INIT ─────────────────────────────────────────────────────────
         document.getElementById('footerYear').textContent = new Date().getFullYear();
         initViewInput();
+        renderBreadcrumb();
 
         if (MULTI_VIEW) {
             const col = document.getElementById('targetViewCol');
