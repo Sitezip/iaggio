@@ -1301,6 +1301,45 @@
             transform: scale(1.08);
         }
 
+        /* ── View tip ── */
+        .view-tip {
+            position: fixed;
+            z-index: 200;
+            background: var(--surface);
+            border: 1px solid var(--accent);
+            border-radius: var(--radius);
+            padding: 0.5rem 0.85rem;
+            font-size: 0.75rem;
+            color: var(--text-bright);
+            max-width: min(320px, calc(100vw - 16px));
+            word-wrap: break-word;
+            pointer-events: none;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+            transition: opacity 0.3s ease;
+        }
+
+        .view-tip::before {
+            content: '';
+            position: absolute;
+            top: -6px;
+            left: 18px;
+            width: 10px;
+            height: 10px;
+            background: var(--surface);
+            border-left: 1px solid var(--accent);
+            border-top: 1px solid var(--accent);
+            transform: rotate(45deg);
+        }
+
+        .view-tip kbd {
+            background: var(--bg);
+            border: 1px solid var(--border-lit);
+            border-radius: 3px;
+            padding: 0.05rem 0.3rem;
+            font-size: 0.7rem;
+            color: var(--accent);
+        }
+
         /* ── Footer ── */
         footer {
             position: relative;
@@ -1380,7 +1419,7 @@
                 <div class="view-config">
                     <i class="fa-solid fa-eye view-config-icon"></i>
                     <input id="configNameInput" type="text" class="view-input" placeholder="home"
-                        title="Enter a view name and press Enter to switch" />
+                        title="Enter your secret view name and press Enter to switch" />
                     <button class="btn-view-go" onclick="applyConfigName()" title="Switch view">
                         <i class="fa-solid fa-arrow-right"></i>
                     </button>
@@ -1526,12 +1565,41 @@
                     <div class="help-section-text">On any named view (not <kbd>home</kbd>), a short link is automatically generated near the top of the page. Click <kbd><i class="fa-regular fa-copy"></i> Copy</kbd> to copy it to your clipboard and share it with others.</div>
                 </div>
 
+                <div class="help-section">
+                    <div class="help-section-icon"><i class="fa-solid fa-folder-open"></i></div>
+                    <div class="help-section-title">Sub-Views</div>
+                    <div class="help-section-text">The <kbd><i class="fa-solid fa-folder-open"></i></kbd> button on each card opens a child view named after that card — the URL becomes <kbd>?v=parentview--childname</kbd>. A breadcrumb at the top lets you navigate back up the hierarchy. This lets you organise locations as a tree: a regional view whose cards drill into city-level lists, a project view that fans out into site lists, and so on.</div>
+                </div>
+
+                <div class="help-section">
+                    <div class="help-section-icon"><i class="fa-solid fa-layer-group"></i></div>
+                    <div class="help-section-title">Multi-View</div>
+                    <div class="help-section-text">Separate two or more view names with <kbd>||</kbd> in the view input (e.g. <kbd>office||warehouse</kbd>) to load them side by side. Cards from every view appear together, each tagged with its source. A <em>Save to View</em> dropdown appears in the Add panel so you can choose which view a new location is added to.</div>
+                </div>
+
+                <div class="help-section">
+                    <div class="help-section-icon"><i class="fa-solid fa-lightbulb"></i></div>
+                    <div class="help-section-title">Use Cases</div>
+                    <div class="help-section-text">
+                        <strong>Daily Driver</strong> — Keep <kbd>home</kbd> as a quick-launch pad for stops you visit every week.<br/>
+                        <strong>Trip Planner</strong> — Name a view after your trip (e.g. <kbd>nashville-2026</kbd>), add all stops, then share the short link with travel companions.<br/>
+                        <strong>Delivery Run</strong> — Add all drop-off addresses, toggle waypoints in order, hit <kbd><i class="fa-solid fa-route"></i> Navigate</kbd> for a live multi-stop route in Google Maps.<br/>
+                        <strong>Field Teams</strong> — Each team member uses their own named view; a manager loads <kbd>team-a||team-b</kbd> to see everyone's sites at once.<br/>
+                        <strong>Nested Lists</strong> — Create a <kbd>regions</kbd> view with cards for each city, then drill into <kbd>regions--chicago</kbd> for Chicago-specific stops.
+                    </div>
+                </div>
+
             </div>
         </div>
     </div>
 
     <!-- Route Bar -->
     <div id="routeBar" style="display:none;"></div>
+
+    <!-- View tip (onload hint for home view) -->
+    <div id="viewTip" class="view-tip" style="display:none;">
+        <i class="fa-solid fa-lightbulb" style="color:var(--warn);margin-right:.4rem;"></i>Type a secret name &amp; press <kbd>↵</kbd> to create your personal destination list
+    </div>
 
     <!-- Back button (shown when browser has history) -->
     <button id="btnBack" class="btn-back" onclick="history.back()" title="Go back" style="display:none;">
@@ -2201,6 +2269,27 @@
 
         if (history.length > 1) {
             document.getElementById('btnBack').style.display = '';
+        }
+
+        if (USE_LOCAL) {
+            const tip = document.getElementById('viewTip');
+            const anchor = document.getElementById('configNameInput');
+            const r = anchor.getBoundingClientRect();
+            tip.style.top = (r.bottom + 10) + 'px';
+            tip.style.left = '0';          // measure first
+            tip.style.display = '';
+            const tipW = tip.offsetWidth;
+            const leftPos = Math.min(Math.max(8, r.left - 8), window.innerWidth - tipW - 8);
+            tip.style.left = leftPos + 'px';
+            const dismiss = () => {
+                tip.style.opacity = '0';
+                setTimeout(() => { tip.style.display = 'none'; }, 300);
+                document.removeEventListener('click', dismiss);
+                document.removeEventListener('keydown', dismiss);
+            };
+            document.addEventListener('click', dismiss, { once: true });
+            document.addEventListener('keydown', dismiss, { once: true });
+            setTimeout(dismiss, 7000);
         }
 
         if (USE_LOCAL && getLocalLocs().length === 0) {
