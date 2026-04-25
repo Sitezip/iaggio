@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>iaggio.com - Your Live En Route</title>
+    <title>iaggio.com - Your Life En Route</title>
 
     <link rel="icon" type="image/png" href="/favicon-96x96.png?v=20260421.0" sizes="96x96" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=20260421.0" />
@@ -1274,6 +1274,33 @@
             background: var(--accent-glow);
         }
 
+        /* ── Back button ── */
+        .btn-back {
+            position: fixed;
+            bottom: 1.5rem;
+            right: 1.5rem;
+            z-index: 500;
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            border: 1px solid var(--border-lit);
+            background: var(--surface);
+            color: var(--accent);
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.4);
+            transition: background 0.15s, border-color 0.15s, transform 0.1s;
+        }
+
+        .btn-back:hover {
+            background: var(--card-hover);
+            border-color: var(--accent);
+            transform: scale(1.08);
+        }
+
         /* ── Footer ── */
         footer {
             position: relative;
@@ -1448,7 +1475,7 @@
                 <div class="help-section">
                     <div class="help-section-icon"><i class="fa-solid fa-eye"></i></div>
                     <div class="help-section-title">Views</div>
-                    <div class="help-section-text">The folder input in the header controls your active <em>view</em> — a named group of locations. The default <kbd>home</kbd> view saves data locally in your browser. Type any other name and press <kbd><i class="fa-solid fa-arrow-right"></i></kbd> to switch to a cloud-synced view accessible at <kbd>?v=name</kbd>.</div>
+                    <div class="help-section-text">The view input in the header controls your active <em>view</em> — a named group of locations. The default <kbd>home</kbd> view saves data locally in your browser. Type any other secret name and press <kbd><i class="fa-solid fa-arrow-right"></i></kbd> to switch to a cloud-synced view.</div>
                 </div>
 
                 <div class="help-divider"></div>
@@ -1505,6 +1532,11 @@
 
     <!-- Route Bar -->
     <div id="routeBar" style="display:none;"></div>
+
+    <!-- Back button (shown when browser has history) -->
+    <button id="btnBack" class="btn-back" onclick="history.back()" title="Go back" style="display:none;">
+        <i class="fa-solid fa-arrow-left"></i>
+    </button>
 
     <!-- Footer -->
     <footer>
@@ -2166,6 +2198,95 @@
 
         // ── INIT ─────────────────────────────────────────────────────────
         document.getElementById('footerYear').textContent = new Date().getFullYear();
+
+        if (history.length > 1) {
+            document.getElementById('btnBack').style.display = '';
+        }
+
+        if (USE_LOCAL && getLocalLocs().length === 0) {
+            saveLocalLocs([{
+                id: uid(), name: 'Graceland',
+                location: '3764 Elvis Presley Blvd, Memphis, TN',
+                note: 'Have you been to Graceland?', zen: uid(), viewName: 'home'
+            },{
+                id: uid(), name: 'The Bean',
+                location: '201 E Randolph St, Chicago, IL',
+                note: 'Also known as Cloud Gate in Millennium Park', zen: uid(), viewName: 'home'
+            },{
+                id: uid(), name: 'Space Needle',
+                location: '400 Broad St, Seattle, WA',
+                note: 'Iconic observation tower in Seattle', zen: uid(), viewName: 'home'
+            },{
+                id: uid(), name: 'Times Square',
+                location: 'Manhattan, NY 10036',
+                note: 'Famous commercial intersection and tourist destination', zen: uid(), viewName: 'home'
+            },{
+                id: uid(), name: 'Golden Gate Bridge',
+                location: 'Golden Gate Bridge, San Francisco, CA',
+                note: 'Famous suspension bridge connecting San Francisco to Marin County', zen: uid(), viewName: 'home'
+            },{
+                id: uid(), name: 'Mount Rushmore',
+                location: '13000 SD-244, Keystone, SD',
+                note: 'Massive sculpture carved into Mount Rushmore featuring four U.S. presidents', zen: uid(), viewName: 'home'
+            },{
+                id: uid(), name: 'Central Park',
+                location: 'New York, NY',
+                note: 'Large public park in the center of Manhattan', zen: uid(), viewName: 'home'
+            },{
+                id: uid(), name: 'The White House',
+                location: '1600 Pennsylvania Ave NW, Washington, DC',
+                note: 'Official residence and workplace of the President of the United States', zen: uid(), viewName: 'home'
+            },{
+                id: uid(), name: 'Disney World',
+                location: 'Orlando, FL',
+                note: 'Famous theme park resort in Florida', zen: uid(), viewName: 'home'
+            },{
+                id: uid(), name: 'The Louvre',
+                location: 'Rue de Rivoli, 75001 Paris, France',
+                note: 'World\'s largest art museum and a historic monument in Paris', zen: uid(), viewName: 'home'
+            },{
+                id: uid(), name: 'Colosseum',
+                location: 'Piazza del Colosseo, 1, 00184 Roma RM, Italy',
+                note: 'Ancient amphitheater in Rome and one of the greatest works of architecture and engineering', zen: uid(), viewName: 'home'
+            },{
+                id: uid(), name: 'Great Wall of China',
+                location: 'Huairou District, China',
+                note: 'Series of fortifications made of stone, brick, tamped earth, wood, and other materials', zen: uid(), viewName: 'home'
+            },{
+                id: uid(), name: 'Sydney Opera House',
+                location: 'Bennelong Point, Sydney NSW 2000, Australia',
+                note: 'Multi-venue performing arts centre in Sydney', zen: uid(), viewName: 'home'
+            },{
+                id: uid(), name: 'Christ the Redeemer',
+                location: 'Parque Nacional da Tijuca - Alto da Boa Vista, Rio de Janeiro - RJ, Brazil',
+                note: 'Art Deco statue of Jesus Christ in Rio de Janeiro', zen: uid(), viewName: 'home'
+            },{
+                id: uid(), name: 'Machu Picchu',
+                location: '08680, Peru',
+                note: '15th-century Inca citadel located in the Eastern Cordillera of southern Peru', zen: uid(), viewName: 'home'
+            },{
+                id: uid(), name: 'Taj Mahal',
+                location: 'Dharmapuri, Forest Colony, Tajganj, Agra, Uttar Pradesh 282001, India',
+                note: 'Ivory-white marble mausoleum on the right bank of the river Yamuna in the Indian city of Agra', zen: uid(), viewName: 'home'
+            },{
+                id: uid(), name: 'Burj Khalifa',
+                location: '1 Sheikh Mohammed bin Rashid Blvd - Dubai - United Arab Emirates',
+                note: 'Skyscraper in Dubai and the tallest structure and building in the world since its topping out in 2010', zen: uid(), viewName: 'home'
+            },{
+                id: uid(), name: 'Stonehenge',
+                location: 'Salisbury SP4 7DE, United Kingdom',
+                note: 'Prehistoric monument in Wiltshire, England, consisting of a ring of standing stones', zen: uid(), viewName: 'home'
+            },{
+                id: uid(), name: 'The Great Pyramid of Giza',
+                location: 'Al Haram, Nazlet El-Semman, Al Giza Desert, Giza Governorate, Egypt',
+                note: 'Oldest and largest of the three pyramids in the Giza pyramid complex', zen: uid(), viewName: 'home'
+            },{
+                id: uid(), name: 'X Corp',
+                location: '1355 Market Street, Suite 900, San Francisco, California, 94103, USA',
+                note: 'Formerly known as Twitter, Inc.', zen: uid(), viewName: 'home'
+            }]);
+        }
+
         initViewInput();
         renderBreadcrumb();
 
