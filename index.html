@@ -1795,7 +1795,8 @@
         }
 
         async function recordDelete(zen) {
-            if (USE_LOCAL) {
+            const rec = locations.find(l => l.zen === zen);
+            if (USE_LOCAL || (rec && rec.viewName === 'home')) {
                 saveLocalLocs(locations.filter(l => l.zen !== zen));
                 return;
             }
