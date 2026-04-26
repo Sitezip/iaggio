@@ -1643,7 +1643,9 @@
     <script>
         // ── CONFIG ──────────────────────────────────────────────────────
         const _urlParams = new URLSearchParams(window.location.search);
-        const _urlName = (_urlParams.get('v') || '').trim();
+        const _urlName  = (_urlParams.get('v')       || '').trim();
+        const _autoName = (_urlParams.get('name')    || '').trim();
+        const _autoAddr = (_urlParams.get('address') || '').trim();
 
         // || = parallel multi-view (each segment is an independent collection name)
         // |  = hierarchical path (full v value is the single collection name; | used for breadcrumbs only)
@@ -1806,6 +1808,7 @@
                 locations = getLocalLocs().map(l => ({ ...l, viewName: 'home' }));
                 sortLocations();
                 renderCards();
+                await autoAddFromUrl();
                 return;
             }
 
@@ -1833,11 +1836,43 @@
                     .flatMap(r => r.value);
                 sortLocations();
                 renderCards();
+                await autoAddFromUrl();
                 if (failed.length) toast(`${failed.length} view(s) failed to load`, 'warning');
             } catch (e) {
                 grid.innerHTML = '';
                 toast('Failed to load locations: ' + e.message, 'error');
             }
+        }
+
+        // ── AUTO-ADD FROM URL ────────────────────────────────────────────
+        async function autoAddFromUrl() {
+            if (!_autoName || !_autoAddr) return;
+            const cleanName = stripHtml(_autoName).replace(/--/g, '-');
+            const cleanAddr = stripHtml(_autoAddr);
+            if (!cleanName || !cleanAddr) return;
+
+            const exists = locations.some(l =>
+                l.name.toLowerCase()     === cleanName.toLowerCase() &&
+                l.location.toLowerCase() === cleanAddr.toLowerCase()
+            );
+
+            if (!exists) {
+                try {
+                    const saved = await recordAdd(cleanName, cleanAddr, '', _viewLabel);
+                    locations.push(saved);
+                    sortLocations();
+                    renderCards();
+                    toast(`Added: ${cleanName}`, 'success');
+                } catch (e) {
+                    toast('Auto-add failed: ' + e.message, 'error');
+                }
+            }
+
+            // Strip name & address from URL, keep everything else (v, etc.)
+            const clean = new URL(window.location.href);
+            clean.searchParams.delete('name');
+            clean.searchParams.delete('address');
+            history.replaceState(null, '', clean.toString());
         }
 
         // ── SORT ─────────────────────────────────────────────────────────
@@ -2291,7 +2326,7 @@
             document.getElementById('btnBack').style.display = '';
         }
 
-        if (USE_LOCAL) {
+        if (USE_LOCAL && !_autoName) {
             const tip = document.getElementById('viewTip');
             const anchor = document.getElementById('configNameInput');
             const r = anchor.getBoundingClientRect();
