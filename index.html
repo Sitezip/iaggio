@@ -49,6 +49,38 @@
             --radius-lg: 10px;
         }
 
+        /* ── Light mode ── */
+        [data-theme="light"] {
+            --bg: #eef3fc;
+            --bg2: #e2eaf8;
+            --surface: #ffffff;
+            --card: #f0f6ff;
+            --card-hover: #e2edff;
+            --border: #c4d6f0;
+            --border-lit: #4da8ff;
+            --accent: #1a7ae8;
+            --accent2: #1560c4;
+            --accent-glow: rgba(26, 122, 232, 0.1);
+            --blue: #1a5cbf;
+            --blue-dim: rgba(26, 122, 232, 0.07);
+            --danger: #d32f2f;
+            --danger-dim: #fde8e8;
+            --warn: #e65100;
+            --text: #1e2f50;
+            --text-dim: #4a6a9a;
+            --text-bright: #0d1e3c;
+        }
+
+        [data-theme="light"] body::before {
+            background-image:
+                linear-gradient(rgba(26, 122, 232, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(26, 122, 232, 0.05) 1px, transparent 1px);
+        }
+
+        [data-theme="light"] header {
+            background: rgba(238, 243, 252, 0.92);
+        }
+
         *,
         *::before,
         *::after {
@@ -1441,6 +1473,9 @@
                 </button>
             </div>
             <div class="header-meta">
+                <button id="btnTheme" class="btn-help" onclick="toggleTheme()" title="Switch to light mode">
+                    <i class="fa-solid fa-sun"></i>
+                </button>
                 <button class="btn-help" onclick="openHelpModal()" title="How to use">
                     <i class="fa-solid fa-circle-question"></i>
                 </button>
@@ -2320,7 +2355,33 @@
             el.style.display = '';
         }
 
+        // ── THEME ────────────────────────────────────────────────────────
+        const _themeKey = 'iaggio_theme';
+
+        function applyTheme(mode) {
+            if (mode === 'light') {
+                document.documentElement.setAttribute('data-theme', 'light');
+            } else {
+                document.documentElement.removeAttribute('data-theme');
+            }
+            const btn = document.getElementById('btnTheme');
+            if (btn) {
+                btn.innerHTML = mode === 'light'
+                    ? '<i class="fa-solid fa-moon"></i>'
+                    : '<i class="fa-solid fa-sun"></i>';
+                btn.title = mode === 'light' ? 'Switch to dark mode' : 'Switch to light mode';
+            }
+        }
+
+        function toggleTheme() {
+            const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+            const next = isLight ? 'dark' : 'light';
+            localStorage.setItem(_themeKey, next);
+            applyTheme(next);
+        }
+
         // ── INIT ─────────────────────────────────────────────────────────
+        applyTheme(localStorage.getItem(_themeKey) || 'dark');
         document.getElementById('footerYear').textContent = new Date().getFullYear();
 
         if (history.length > 1) {
