@@ -1087,6 +1087,24 @@
             color: #030d1f;
         }
 
+        [data-theme="light"] .btn-waypoint {
+            background: var(--surface);
+            border-color: var(--border);
+            color: var(--text-dim);
+        }
+
+        [data-theme="light"] .btn-waypoint:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+            background: var(--accent-glow);
+        }
+
+        [data-theme="light"] .btn-waypoint.active {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: #ffffff;
+        }
+
         .loc-card.is-waypoint {
             border-color: var(--border-lit);
             box-shadow: 0 0 0 1px rgba(77, 168, 255, 0.15);
@@ -1144,6 +1162,18 @@
         }
 
         .route-bar-chips::-webkit-scrollbar { display: none; }
+
+        [data-theme="light"] .route-bar {
+            background: rgba(238, 243, 252, 0.96);
+        }
+
+        [data-theme="light"] .route-chip {
+            border-color: var(--border);
+        }
+
+        [data-theme="light"] .route-chip-num {
+            color: #ffffff;
+        }
 
         .route-chip {
             display: inline-flex;
