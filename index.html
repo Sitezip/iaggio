@@ -1340,6 +1340,41 @@
             background: var(--accent-glow);
         }
 
+        /* ── Single-record link button on card ── */
+        .btn-single {
+            position: absolute;
+            top: 0.85rem;
+            right: 4.85rem;
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            border: 1px solid var(--border);
+            background: var(--bg2);
+            color: var(--text-dim);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.65rem;
+            font-family: var(--mono);
+            font-weight: 700;
+            line-height: 1;
+            transition: all 0.15s;
+            z-index: 2;
+            text-decoration: none;
+        }
+
+        /* no sub-view button present → slide into its slot */
+        .btn-single.no-subview {
+            right: 2.85rem;
+        }
+
+        .btn-single:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+            background: var(--accent-glow);
+        }
+
         /* ── Back button ── */
         .btn-back {
             position: fixed;
@@ -1700,6 +1735,10 @@
         const _autoName = (_urlParams.get('name')    || '').trim();
         const _autoAddr = (_urlParams.get('address') || '').trim();
 
+        // Single-record display: ?locationId={zen} fetches one exact record
+        const _singleZen  = (_urlParams.get('locationId') || '').trim();
+        const SINGLE_VIEW = !!_singleZen;
+
         // || = parallel multi-view (each segment is an independent collection name)
         // |  = hierarchical path (full v value is the single collection name; | used for breadcrumbs only)
         const MULTI_VIEW = _urlName.includes('||');
@@ -1792,6 +1831,18 @@
                 id: r.id, name: r.name, location: r.location,
                 note: r.note || '', zen: r.zen, viewName
             }));
+        }
+
+        async function zenGetSingle(zen) {
+            const data = await apiGet(
+                `/Collections/zenGet?zen=${encodeURIComponent(zen)}&exactRecord=1`
+            );
+            const r = (data.response || [])[0];
+            if (!r) throw new Error('Record not found');
+            return {
+                id: r.id, name: r.name, location: r.location,
+                note: r.note || '', zen: r.zen, viewName: _viewLabel
+            };
         }
 
         async function zenPost(record, targetView) {
@@ -1895,6 +1946,32 @@
             } catch (e) {
                 grid.innerHTML = '';
                 toast('Failed to load locations: ' + e.message, 'error');
+            }
+        }
+
+        // ── LOAD SINGLE RECORD ───────────────────────────────────────────
+        async function loadSingleLocation() {
+            const grid = document.getElementById('cardGrid');
+            grid.innerHTML = `
+      <div class="col-12">
+        <div class="page-loader">
+          <div class="spinner"></div>
+          <p><i class="fa-solid fa-satellite-dish" style="margin-right:.4rem;color:var(--accent);"></i>Fetching location…</p>
+        </div>
+      </div>`;
+            try {
+                const record = await zenGetSingle(_singleZen);
+                locations = [record];
+                renderCards();
+            } catch (e) {
+                grid.innerHTML = `
+        <div class="col-12">
+          <div class="empty-state">
+            <i class="fa-solid fa-compass empty-icon"></i>
+            <p>Location not found.</p>
+          </div>
+        </div>`;
+                toast('Failed to load location: ' + e.message, 'error');
             }
         }
 
@@ -2201,21 +2278,28 @@
                 const badge = isPlus
                     ? `<span class="card-type-badge badge-pluscode"><i class="fa-solid fa-th"></i> Plus Code</span>`
                     : `<span class="card-type-badge badge-address"><i class="fa-solid fa-map-marker-alt"></i> Address</span>`;
-                const _svName = (!USE_LOCAL && !MULTI_VIEW) ? sanitizeViewName(l.name) : '';
+                const _svName = (!SINGLE_VIEW && !USE_LOCAL && !MULTI_VIEW) ? sanitizeViewName(l.name) : '';
                 const subViewBtn = _svName
                     ? `<a class="btn-subview" href="?v=${encodeURIComponent(_viewLabel + '--' + _svName)}" title="Open sub-view: ${esc(_svName)}"><i class="fa-solid fa-arrow-down"></i></a>`
                     : '';
+                const waypointBtn = SINGLE_VIEW
+                    ? ''
+                    : `<button class="btn-waypoint${isWaypoint ? ' active' : ''}"
+                    onclick="toggleWaypoint('${esc(l.zen)}')"
+                    title="${isWaypoint ? 'Remove from route' : 'Add to route'}">
+              ${isWaypoint ? wpIdx + 1 : '<i class="fa-solid fa-route"></i>'}
+            </button>`;
+                const singleBtn = (SINGLE_VIEW || USE_LOCAL)
+                    ? ''
+                    : `<a class="btn-single${_svName ? '' : ' no-subview'}" href="?locationId=${encodeURIComponent(l.zen)}" title="View this location only"><i class="fa-solid fa-up-right-from-square"></i></a>`;
 
                 return `
         <div class="col-sm-6 col-lg-4">
           <div class="loc-card${isWaypoint ? ' is-waypoint' : ''}" data-zen="${esc(l.zen)}" style="animation-delay:${i * 0.04}s">
 
-            <button class="btn-waypoint${isWaypoint ? ' active' : ''}"
-                    onclick="toggleWaypoint('${esc(l.zen)}')"
-                    title="${isWaypoint ? 'Remove from route' : 'Add to route'}">
-              ${isWaypoint ? wpIdx + 1 : '<i class="fa-solid fa-route"></i>'}
-            </button>
+            ${waypointBtn}
             ${subViewBtn}
+            ${singleBtn}
 
             <div class="view-section">
               ${badge}
@@ -2511,18 +2595,30 @@
             }]);
         }
 
-        initViewInput();
-        renderBreadcrumb();
+        if (SINGLE_VIEW) {
+            // Single-record display — hide breadcrumb, add form & filter
+            // (keep the share bar so the current URL can be shared as a short link)
+            document.getElementById('breadcrumbBar').style.display = 'none';
+            const addPanel = document.querySelector('.add-panel');
+            if (addPanel) addPanel.style.display = 'none';
+            const toolbar = document.querySelector('.toolbar');
+            if (toolbar) toolbar.style.display = 'none';
+            loadShortLink();
+            loadSingleLocation();
+        } else {
+            initViewInput();
+            renderBreadcrumb();
 
-        if (MULTI_VIEW) {
-            const col = document.getElementById('targetViewCol');
-            col.style.display = '';
-            document.getElementById('inTargetView').innerHTML =
-                CONFIG.names.map(n => `<option value="${esc(n)}">${esc(n)}</option>`).join('');
+            if (MULTI_VIEW) {
+                const col = document.getElementById('targetViewCol');
+                col.style.display = '';
+                document.getElementById('inTargetView').innerHTML =
+                    CONFIG.names.map(n => `<option value="${esc(n)}">${esc(n)}</option>`).join('');
+            }
+
+            if (!USE_LOCAL) loadShortLink();
+            loadLocations();
         }
-
-        if (!USE_LOCAL) loadShortLink();
-        loadLocations();
     </script>
 </body>
 
