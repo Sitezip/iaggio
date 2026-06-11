@@ -2084,6 +2084,7 @@
         // ── DELETE CONFIRMATION ───────────────────────────────────────────
         const _delTimers = {};
         function confirmDelete(zen) {
+            if (SINGLE_VIEW) return;
             if (_delTimers[zen]) { clearTimeout(_delTimers[zen]); delete _delTimers[zen]; }
             const card = document.querySelector(`[data-zen="${CSS.escape(zen)}"]`);
             if (!card) return;
@@ -2133,6 +2134,7 @@
 
         // ── EDIT ─────────────────────────────────────────────────────────
         function startEdit(zen) {
+            if (SINGLE_VIEW) return;
             const card = document.querySelector(`[data-zen="${CSS.escape(zen)}"]`);
             card.querySelector('.view-section').style.display = 'none';
             card.querySelector('.edit-form').classList.add('active');
@@ -2310,17 +2312,17 @@
                 <i class="fa-solid fa-route"></i> Navigate
               </button>
               <div class="card-actions">
-                <button class="btn-icon" onclick="startEdit('${esc(l.zen)}')">
+                ${SINGLE_VIEW ? '' : `<button class="btn-icon" onclick="startEdit('${esc(l.zen)}')">
                   <i class="fa-solid fa-pen"></i> Edit
                 </button>
                 <button class="btn-icon danger btn-delete" onclick="confirmDelete('${esc(l.zen)}')">
                   <i class="fa-solid fa-trash-alt"></i> Delete
-                </button>
+                </button>`}
                 ${viewTag}
               </div>
             </div>
 
-            <div class="edit-form">
+            ${SINGLE_VIEW ? '' : `<div class="edit-form">
               <input class="form-control edit-name" value="${esc(l.name)}" placeholder="Name"/>
               <input class="form-control edit-loc"  value="${esc(l.location)}" placeholder="Address or Plus Code"/>
               <input class="form-control edit-note" value="${esc(l.note || '')}" placeholder="Note (optional · 128 chars)" maxlength="128"/>
@@ -2332,7 +2334,7 @@
                   <i class="fa-solid fa-times"></i> Cancel
                 </button>
               </div>
-            </div>
+            </div>`}
 
           </div>
         </div>`;
