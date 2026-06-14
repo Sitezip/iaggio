@@ -555,7 +555,19 @@
             background: var(--accent-glow);
             transition: background 0.15s, border-color 0.15s, color 0.15s, box-shadow 0.15s;
             width: 100%;
+        }
+
+        .maps-row {
+            display: flex;
+            gap: 0.5rem;
             margin-top: 1.2rem;
+        }
+
+        .maps-view {
+            width: auto;
+            flex: 0 0 auto;
+            padding-left: 0.85rem;
+            padding-right: 0.85rem;
         }
 
         .maps-link:hover {
@@ -1581,10 +1593,10 @@
                     <div class="col-12 col-md-auto">
                         <div class="d-flex gap-2">
                             <button id="btnAdd" class="btn-primary-custom flex-fill" onclick="addLocation()">
-                                <i class="fa-solid fa-plus"></i> Add
+                                <i class="fa-solid fa-map-location-dot"></i> Add
                             </button>
                             <button class="btn-test" onclick="testLocation()" title="Test in Google Maps">
-                                <i class="fa-solid fa-map-location-dot"></i><span class="btn-test-label"> Test</span>
+                                <i class="fa-solid fa-eye"></i><span class="btn-test-label"> Test</span>
                             </button>
                         </div>
                     </div>
@@ -1802,6 +1814,10 @@
         // ── MAPS URL ─────────────────────────────────────────────────────
         function mapsUrl(loc) {
             return 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(loc);
+        }
+
+        function viewLocation(location) {
+            window.open(mapsUrl(location), '_blank', 'noopener,noreferrer');
         }
 
         // ── LOCAL STORAGE HELPERS ────────────────────────────────────────
@@ -2308,9 +2324,14 @@
               <div class="card-name" title="${esc(l.name)}">${esc(l.name)}</div>
               <div class="card-location" title="${esc(l.location)}">${esc(l.location)}</div>
               ${l.note ? `<div class="card-note">${esc(l.note)}</div>` : ''}
-              <button class="maps-link" onclick="navigateTo('${esc(l.zen)}', '${esc(l.location)}')">
-                <i class="fa-solid fa-route"></i> Navigate
-              </button>
+              <div class="maps-row">
+                <button class="maps-link" onclick="navigateTo('${esc(l.zen)}', '${esc(l.location)}')">
+                  <i class="fa-solid fa-route"></i> Navigate
+                </button>
+                <button class="maps-link maps-view" onclick="viewLocation('${esc(l.location)}')" title="View location in Google Maps">
+                  <i class="fa-solid fa-eye"></i>
+                </button>
+              </div>
               <div class="card-actions">
                 ${SINGLE_VIEW ? '' : `<button class="btn-icon" onclick="startEdit('${esc(l.zen)}')">
                   <i class="fa-solid fa-pen"></i> Edit
