@@ -1819,6 +1819,23 @@
         // ── STATE ───────────────────────────────────────────────────────
         let locations = []; // { id, name, location, zen }
 
+        // ── PAGE TITLE ───────────────────────────────────────────────────
+        const BASE_TITLE = 'iaggio.com - Your Life En Route';
+
+        // Prepends the active view name to the document title, displayed the same
+        // way as the breadcrumb bar: `--` segments split apart and joined by a
+        // chevron, e.g. "stops › chicago - iaggio.com - Your Life En Route".
+        // The local `home` view has no view name, so it keeps the base title.
+        function updatePageTitle(viewName) {
+            const v = (viewName !== undefined
+                ? String(viewName)
+                : (new URLSearchParams(window.location.search).get('v') || '')).trim();
+            const path = v.split('--').join(' › ');
+            document.title = path ? path + ' - ' + BASE_TITLE : BASE_TITLE;
+        }
+
+        window.addEventListener('popstate', () => updatePageTitle());
+
         // ── VIEW NAME UI ─────────────────────────────────────────────────
         function initViewInput() {
             const input = document.getElementById('configNameInput');
@@ -1832,6 +1849,7 @@
         function applyConfigName() {
             const val = document.getElementById('configNameInput').value.trim();
             if (val === _urlName) return;
+            updatePageTitle((!val || val.toLowerCase() === 'home') ? '' : val);
             window.location.href = (!val || val.toLowerCase() === 'home')
                 ? window.location.pathname
                 : window.location.pathname + '?v=' + encodeURIComponent(val);
@@ -2063,6 +2081,7 @@
             clean.searchParams.delete('name');
             clean.searchParams.delete('address');
             history.replaceState(null, '', clean.toString());
+            updatePageTitle();
         }
 
         // ── SORT ─────────────────────────────────────────────────────────
@@ -2550,6 +2569,7 @@
 
         // ── INIT ─────────────────────────────────────────────────────────
         applyTheme(localStorage.getItem(_themeKey) || 'dark');
+        updatePageTitle();
         document.getElementById('footerYear').textContent = new Date().getFullYear();
 
         if (history.length > 1) {
