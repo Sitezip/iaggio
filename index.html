@@ -41,6 +41,7 @@
             --warn: #ffb74d;
             --private: #c792ea;
             --private-dim: rgba(199, 146, 234, 0.1);
+            --warn-dim: rgba(255, 183, 77, 0.1);
             --text: #cde2f8;
             --text-dim: #7da0cc;
             --text-bright: #eaf3ff;
@@ -70,6 +71,7 @@
             --warn: #e65100;
             --private: #7b3fb0;
             --private-dim: rgba(123, 63, 176, 0.08);
+            --warn-dim: rgba(230, 81, 0, 0.08);
             --text: #1e2f50;
             --text-dim: #4a6a9a;
             --text-bright: #0d1e3c;
@@ -527,6 +529,97 @@
             color: var(--private);
             border: 1px solid var(--private);
             margin-left: 0.35rem;
+        }
+
+        .badge-restricted {
+            background: var(--warn-dim);
+            color: var(--warn);
+            border: 1px solid var(--warn);
+            margin-left: 0.35rem;
+        }
+
+        .card-readonly-note {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-family: var(--mono);
+            font-size: 0.78rem;
+            color: var(--text-dim);
+            padding: 0.35rem 0;
+        }
+
+        /* ── Access (editable / view-only) toggle ── */
+        .access-toggle {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.55rem;
+            height: calc(0.92rem * 1.5 + 1.1rem + 2px);
+            padding: 0 0.85rem;
+            background: var(--bg2);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            cursor: pointer;
+            user-select: none;
+            white-space: nowrap;
+        }
+
+        .access-toggle input {
+            position: absolute;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .access-track {
+            position: relative;
+            width: 34px;
+            height: 18px;
+            border-radius: 9px;
+            background: var(--border);
+            transition: background 0.15s;
+            flex-shrink: 0;
+        }
+
+        .access-thumb {
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: var(--text-bright);
+            transition: transform 0.15s;
+        }
+
+        .access-toggle input:checked + .access-track {
+            background: var(--warn);
+        }
+
+        .access-toggle input:checked + .access-track .access-thumb {
+            transform: translateX(16px);
+        }
+
+        .access-toggle input:focus-visible + .access-track {
+            box-shadow: 0 0 0 3px var(--accent-glow);
+        }
+
+        .access-toggle input:disabled + .access-track {
+            opacity: 0.4;
+        }
+
+        .access-toggle:has(input:disabled) {
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .access-label {
+            font-family: var(--body);
+            font-size: 0.92rem;
+            color: var(--text-bright);
+        }
+
+        .access-label i {
+            color: var(--text-dim);
+            margin-right: 0.2rem;
         }
 
         .btn-icon.btn-visibility.is-private {
@@ -1731,6 +1824,14 @@
                             <option value="private">Private</option>
                         </select>
                     </div>
+                    <div class="col-12 col-md-auto" id="restrictCol" style="display:none;">
+                        <label class="form-label" for="inRestricted">Access</label>
+                        <label class="access-toggle" title="View-only locations are locked once saved — nobody but an administrator can edit or delete them">
+                            <input id="inRestricted" type="checkbox" onchange="syncAccessToggle()" />
+                            <span class="access-track"><span class="access-thumb"></span></span>
+                            <span id="accessLabel" class="access-label"><i class="fa-solid fa-pen-to-square"></i> Editable</span>
+                        </label>
+                    </div>
                     <div class="col-12 col-md-auto">
                         <div class="d-flex gap-2">
                             <button id="btnAdd" class="btn-primary-custom flex-fill" onclick="addLocation()">
@@ -1855,7 +1956,7 @@
                 <div class="help-section">
                     <div class="help-section-icon"><i class="fa-solid fa-location-dot"></i></div>
                     <div class="help-section-title">Adding a Location</div>
-                    <div class="help-section-text">Enter a <strong>Name</strong> and an <strong>Address</strong> or <strong>Plus Code</strong>, plus an optional short <strong>Note</strong>, then click <kbd><i class="fa-solid fa-map-location-dot"></i> Add</kbd>. Use the <kbd><i class="fa-solid fa-eye"></i> Test</kbd> button to open the address in Google Maps and verify it before saving. When you're signed in on a cloud view, a <em>Visibility</em> dropdown lets you save the location as <strong>Public</strong> or <strong>Private</strong> (see <em>Private Locations</em> below).</div>
+                    <div class="help-section-text">Enter a <strong>Name</strong> and an <strong>Address</strong> or <strong>Plus Code</strong>, plus an optional short <strong>Note</strong>, then click <kbd><i class="fa-solid fa-map-location-dot"></i> Add</kbd>. Use the <kbd><i class="fa-solid fa-eye"></i> Test</kbd> button to open the address in Google Maps and verify it before saving. When you're signed in on a cloud view, a <em>Visibility</em> dropdown lets you save the location as <strong>Public</strong> or <strong>Private</strong> (see <em>Accounts &amp; Private Locations</em> below). On cloud views, the <em>Access</em> toggle sets a public location to <strong>Editable</strong> (anyone with the view name can edit or delete it) or <strong>View-only</strong>, meaning anyone can see it and route to it, but once it's saved it's locked: only a site administrator can edit or delete it, and that includes you. Double-check the details before saving.</div>
                 </div>
 
                 <div class="help-divider"></div>
@@ -1879,7 +1980,7 @@
                 <div class="help-section">
                     <div class="help-section-icon"><i class="fa-solid fa-pen"></i></div>
                     <div class="help-section-title">Editing &amp; Deleting</div>
-                    <div class="help-section-text">Each card has an <kbd><i class="fa-solid fa-pen"></i> Edit</kbd> button to update its name, location, or note inline, and a <kbd><i class="fa-solid fa-trash-alt"></i> Delete</kbd> button — click it again within a few seconds to confirm. Deleted locations disappear from the view right away.</div>
+                    <div class="help-section-text">Each card has an <kbd><i class="fa-solid fa-pen"></i> Edit</kbd> button to update its name, location, or note inline, and a <kbd><i class="fa-solid fa-trash-alt"></i> Delete</kbd> button — click it again within a few seconds to confirm. Deleted locations disappear from the view right away. Cards marked <kbd><i class="fa-solid fa-eye"></i> View-only</kbd> show <kbd><i class="fa-solid fa-lock"></i> Locked</kbd> instead: only a site administrator can edit or delete them, though a signed-in user can still make a private copy.</div>
                 </div>
 
                 <div class="help-divider"></div>
@@ -1995,6 +2096,10 @@
         const CONFIG = {
             baseUrl: 'https://zzzap.io',
             group: 'iaggio.com',
+            // Same view, locked public records. [CRXXCRUD]: guests (no publicAuthCd)
+            // may only Create/Read; authenticated callers get full CRUD so an admin
+            // can still manage them. The server enforces it.
+            lockedGroup: 'iaggio.com[CRXXCRUD]',
             // configs[].name whose .zcd holds this app's auth code after sign-in
             authConfig: 'iaggio.com',
             // multi-view: individual sanitized names for load + dropdown
@@ -2115,22 +2220,34 @@
 
         // `private` is stored in the record's own json so the card can show it;
         // the server-side ownership comes from publicAuthCd on the write.
-        function recordJson(record, isPrivate) {
+        function recordJson(record, isPrivate, restricted) {
             return encodeURIComponent(JSON.stringify({
                 id: record.id, name: record.name, location: record.location,
-                note: record.note || '', private: !!isPrivate
+                note: record.note || '', private: !!isPrivate, restricted: !!restricted
             }));
         }
 
+        // zid is "{n}|{group}|{name}" — the group tells us if the record is locked.
+        // Falls back to the flag stored in the record's own json.
+        function isRestricted(r) {
+            return typeof r.zid === 'string'
+                ? r.zid.split('|')[1] === CONFIG.lockedGroup
+                : !!r.restricted;
+        }
+
+        // A view lives in two groups (editable + locked). Two exact reads, rather than
+        // zenSearch, whose LIKE match would also pull in other views containing this name.
         async function zenGet(viewName) {
-            const data = await apiGet(
-                `/Collections/zenGet?group=${encodeURIComponent(CONFIG.group)}&name=${encodeURIComponent(viewName)}&limit=100`,
+            const groups = [CONFIG.group, CONFIG.lockedGroup];
+            const results = await Promise.all(groups.map(g => apiGet(
+                `/Collections/zenGet?group=${encodeURIComponent(g)}&name=${encodeURIComponent(viewName)}&limit=100`,
                 true
-            );
-            return (data.response || []).map(r => ({
+            )));
+            return results.flatMap((data, i) => (Array.isArray(data.response) ? data.response : []).map(r => ({
                 id: r.id, name: r.name, location: r.location,
-                note: r.note || '', zen: r.zen, viewName, isPrivate: !!r.private
-            }));
+                note: r.note || '', zen: r.zen, viewName, isPrivate: !!r.private,
+                restricted: groups[i] === CONFIG.lockedGroup
+            })));
         }
 
         async function zenGetSingle(zen) {
@@ -2142,43 +2259,52 @@
             if (!r) throw new Error('Record not found');
             return {
                 id: r.id, name: r.name, location: r.location,
-                note: r.note || '', zen: r.zen, viewName: _viewLabel, isPrivate: !!r.private
+                note: r.note || '', zen: r.zen, viewName: _viewLabel, isPrivate: !!r.private,
+                restricted: isRestricted(r)
             };
         }
 
-        async function zenPost(record, targetView, isPrivate) {
+        // restricted (view-only) applies to public records only
+        async function zenPost(record, targetView, isPrivate, restricted = false) {
             const vn = targetView || _viewLabel;
+            const locked = !isPrivate && !!restricted;
             if (isPrivate) await ensureSession();
+            const group = locked ? CONFIG.lockedGroup : CONFIG.group;
             const data = await apiGet(
-                `/Collections/zenPost?group=${encodeURIComponent(CONFIG.group)}&name=${encodeURIComponent(vn)}&json=${recordJson(record, isPrivate)}`,
+                `/Collections/zenPost?group=${encodeURIComponent(group)}&name=${encodeURIComponent(vn)}&json=${recordJson(record, isPrivate, locked)}`,
                 !!isPrivate
             );
             const r = data.response[0];
-            return { id: r.id, name: r.name, location: r.location, note: r.note || '', zen: r.zen, viewName: MULTI_VIEW ? vn : _viewLabel, isPrivate: !!isPrivate };
+            return { id: r.id, name: r.name, location: r.location, note: r.note || '', zen: r.zen, viewName: MULTI_VIEW ? vn : _viewLabel, isPrivate: !!isPrivate, restricted: locked };
         }
 
-        async function zenPut(zen, record, isPrivate) {
-            if (isPrivate) await ensureSession();
+        // restricted: a locked public record, only reachable by an admin — the
+        // publicAuthCd must ride along to get the [CRXXCRUD] authenticated nibble.
+        async function zenPut(zen, record, isPrivate, restricted = false) {
+            const withAuth = !!isPrivate || !!restricted;
+            if (withAuth) await ensureSession();
             const data = await apiGet(
-                `/Collections/zenPut?zen=${encodeURIComponent(zen)}&json=${recordJson(record, isPrivate)}`,
-                !!isPrivate
+                `/Collections/zenPut?zen=${encodeURIComponent(zen)}&json=${recordJson(record, isPrivate, restricted)}`,
+                withAuth
             );
             const r = data.response[0];
             const src = locations.find(l => l.zen === zen)?.viewName || _viewLabel;
-            return { id: r.id, name: r.name, location: r.location, note: r.note || '', zen: r.zen, viewName: src, isPrivate: !!isPrivate };
+            return { id: r.id, name: r.name, location: r.location, note: r.note || '', zen: r.zen, viewName: src, isPrivate: !!isPrivate, restricted: !!restricted };
         }
 
         // Public records are soft-deleted (flagged, not removed); private ones are
         // hard-deleted. Omit softDelete rather than sending "false".
-        async function zenDelete(zen, isPrivate) {
+        async function zenDelete(zen, isPrivate, restricted = false) {
+            const withAuth = !!isPrivate || !!restricted;
+            if (restricted) await ensureSession();
             await apiGet(
                 `/Collections/zenDelete?zen=${encodeURIComponent(zen)}${isPrivate ? '' : '&softDelete=true'}`,
-                !!isPrivate
+                withAuth
             );
         }
 
         // ── CRUD DISPATCH ────────────────────────────────────────────────
-        async function recordAdd(name, location, note, targetView, isPrivate = false) {
+        async function recordAdd(name, location, note, targetView, isPrivate = false, restricted = false) {
             const cleanNote = stripHtml(note);
             if (USE_LOCAL || targetView === 'home') {
                 const record = { id: uid(), name, location, note: cleanNote, zen: uid(), viewName: 'home' };
@@ -2188,19 +2314,20 @@
                 return record;
             }
             if (isPrivate && !authCode) throw new Error('Sign in to save private locations');
-            return await zenPost({ id: uid(), name, location, note: cleanNote }, targetView, isPrivate);
+            return await zenPost({ id: uid(), name, location, note: cleanNote }, targetView, isPrivate, restricted);
         }
 
         async function recordUpdate(zen, name, location, note) {
             const rec = locations.find(l => l.zen === zen);
             if (!rec) throw new Error('Record not found');
+            if (rec.restricted && !canManageLocked()) throw new Error('This location is view-only');
             const cleanNote = stripHtml(note);
             if (USE_LOCAL || rec.viewName === 'home') {
                 rec.name = name; rec.location = location; rec.note = cleanNote;
                 saveLocalLocs(locations);
                 return { ...rec };
             }
-            return await zenPut(zen, { id: rec.id, name, location, note: cleanNote }, rec.isPrivate);
+            return await zenPut(zen, { id: rec.id, name, location, note: cleanNote }, rec.isPrivate, rec.restricted);
         }
 
         async function recordDelete(zen) {
@@ -2209,7 +2336,17 @@
                 saveLocalLocs(locations.filter(l => l.zen !== zen));
                 return;
             }
-            await zenDelete(zen, rec?.isPrivate);
+            if (rec?.restricted && !canManageLocked()) throw new Error('This location is view-only');
+            await zenDelete(zen, rec?.isPrivate, rec?.restricted);
+        }
+
+        // ── ROOT / ADMIN ─────────────────────────────────────────────────
+        // Locked (view-only) public records are closed to guests but open to any
+        // authenticated caller server-side ([CRXXCRUD]). The UI only offers
+        // edit/delete on them to an admin. Root access isn't established yet, so
+        // nobody qualifies — wire the real check in here.
+        function canManageLocked() {
+            return false;
         }
 
         // ── AUTH ─────────────────────────────────────────────────────────
@@ -2368,7 +2505,24 @@
             const col = document.getElementById('visibilityCol');
             if (col) col.style.display = (authCode && !USE_LOCAL) ? '' : 'none';
             if (!authCode) document.getElementById('inVisibility').value = 'public';
+            syncAccessToggle();
         }
+
+        // View-only only applies to public cloud records: disabled for Private,
+        // and for the local `home` target in a multi-view.
+        function syncAccessToggle() {
+            const el = document.getElementById('inRestricted');
+            const isPrivate = !!authCode && document.getElementById('inVisibility').value === 'private';
+            const toHome = MULTI_VIEW && document.getElementById('inTargetView').value === 'home';
+            el.disabled = isPrivate || toHome;
+            if (el.disabled) el.checked = false;
+            document.getElementById('accessLabel').innerHTML = el.checked
+                ? '<i class="fa-solid fa-lock"></i> View-only'
+                : '<i class="fa-solid fa-pen-to-square"></i> Editable';
+        }
+
+        document.getElementById('inVisibility').addEventListener('change', syncAccessToggle);
+        document.getElementById('inTargetView').addEventListener('change', syncAccessToggle);
 
         function openAuthModal() {
             document.getElementById('authTitle').textContent = authCode ? 'Account' : 'Sign In';
@@ -2409,8 +2563,12 @@
             const target = rec.isPrivate ? 'public' : 'private';
             document.getElementById('visTitle').textContent = rec.isPrivate ? 'Make Public' : 'Make Private';
             document.getElementById('visIcon').className = 'fa-solid ' + (rec.isPrivate ? 'fa-lock-open' : 'fa-lock');
-            document.getElementById('visText').innerHTML =
-                `Change <strong>${esc(rec.name)}</strong> from ${rec.isPrivate ? 'private' : 'public'} to <strong>${target}</strong>.`;
+            // A view-only original can't be deleted (except by an admin), so Copy only
+            const locked = rec.restricted && !canManageLocked();
+            document.getElementById('btnVisMove').style.display = locked ? 'none' : '';
+            document.getElementById('visText').innerHTML = locked
+                ? `<strong>${esc(rec.name)}</strong> is view-only and can't be moved or removed, but you can add a <strong>private</strong> copy.`
+                : `Change <strong>${esc(rec.name)}</strong> from ${rec.isPrivate ? 'private' : 'public'} to <strong>${target}</strong>.`;
             document.getElementById('visModal').style.display = 'flex';
             document.body.style.overflow = 'hidden';
         }
@@ -2441,7 +2599,7 @@
                 let moved = false;
                 if (mode === 'move') {
                     try {
-                        await zenDelete(rec.zen, rec.isPrivate);
+                        await zenDelete(rec.zen, rec.isPrivate, rec.restricted);
                         locations = locations.filter(l => l.zen !== rec.zen);
                         const wp = waypoints.find(w => w.zen === rec.zen);
                         if (wp) wp.zen = created.zen;
@@ -2600,6 +2758,8 @@
                 ? document.getElementById('inTargetView').value
                 : _viewLabel;
             const isPrivate = !!authCode && document.getElementById('inVisibility').value === 'private';
+            const restrictEl = document.getElementById('inRestricted');
+            const restricted = !USE_LOCAL && !restrictEl.disabled && restrictEl.checked;
 
             if (!name || !location) {
                 errEl.textContent = 'Both name and location are required.';
@@ -2625,14 +2785,17 @@
             btnAdd.innerHTML = '<span class="spinner" style="width:14px;height:14px;border-width:2px;display:inline-block;"></span> Saving…';
 
             try {
-                const saved = await recordAdd(name, location, note, targetView, isPrivate);
+                const saved = await recordAdd(name, location, note, targetView, isPrivate, restricted);
                 locations.push(saved);
                 sortLocations();
                 nameEl.value = '';
                 locEl.value = '';
                 noteEl.value = '';
+                // View-only locks the record once saved, so never let it carry over
+                restrictEl.checked = false;
+                syncAccessToggle();
                 renderCards();
-                toast('Location saved', 'success');
+                toast(saved.restricted ? 'Location saved as view-only' : 'Location saved', 'success');
             } catch (e) {
                 toast('Save failed: ' + e.message, 'error');
             } finally {
@@ -2842,7 +3005,10 @@
                     : `<span class="card-type-badge badge-address"><i class="fa-solid fa-map-marker-alt"></i> Address</span>`;
                 const privateBadge = l.isPrivate
                     ? `<span class="card-type-badge badge-private" title="Only visible to your account"><i class="fa-solid fa-lock"></i> Private</span>`
-                    : '';
+                    : l.restricted
+                        ? `<span class="card-type-badge badge-restricted" title="Public, but locked against edits and deletes"><i class="fa-solid fa-eye"></i> View-only</span>`
+                        : '';
+                const canModify = !SINGLE_VIEW && (!l.restricted || canManageLocked());
                 // Cloud records only — home/local records have no public/private
                 const visBtn = (!SINGLE_VIEW && !USE_LOCAL && l.viewName !== 'home' && authCode)
                     ? `<button class="btn-icon btn-visibility${l.isPrivate ? ' is-private' : ''}" onclick="openVisModal('${esc(l.zen)}')" title="${l.isPrivate ? 'Make public' : 'Make private'}">
@@ -2886,7 +3052,8 @@
                 </button>
               </div>
               <div class="card-actions">
-                ${SINGLE_VIEW ? '' : `<button class="btn-icon" onclick="startEdit('${esc(l.zen)}')">
+                ${l.restricted && !canModify && !SINGLE_VIEW ? `<span class="card-readonly-note"><i class="fa-solid fa-lock"></i> Locked</span>` : ''}
+                ${!canModify ? '' : `<button class="btn-icon" onclick="startEdit('${esc(l.zen)}')">
                   <i class="fa-solid fa-pen"></i> Edit
                 </button>
                 <button class="btn-icon danger btn-delete" onclick="confirmDelete('${esc(l.zen)}')">
@@ -2897,7 +3064,7 @@
               </div>
             </div>
 
-            ${SINGLE_VIEW ? '' : `<div class="edit-form">
+            ${!canModify ? '' : `<div class="edit-form">
               <input class="form-control edit-name" value="${esc(l.name)}" placeholder="Name"/>
               <input class="form-control edit-loc"  value="${esc(l.location)}" placeholder="Address or Plus Code"/>
               <input class="form-control edit-note" value="${esc(l.note || '')}" placeholder="Note (optional · 128 chars)" maxlength="128"/>
@@ -3194,6 +3361,12 @@
                 col.style.display = '';
                 document.getElementById('inTargetView').innerHTML =
                     CONFIG.names.map(n => `<option value="${esc(n)}">${esc(n)}</option>`).join('');
+            }
+
+            // Editable / view-only only means something for cloud records
+            if (!USE_LOCAL) {
+                document.getElementById('restrictCol').style.display = '';
+                syncAccessToggle();
             }
 
             if (!USE_LOCAL) loadShortLink();
