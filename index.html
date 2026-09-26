@@ -2018,7 +2018,7 @@
                     <div class="help-section-icon"><i class="fa-solid fa-link"></i></div>
                     <div class="help-section-title">Adding Stops by URL</div>
                     <div class="help-section-text">
-                        Add a stop without using the form by opening an iaggio.com URL with <kbd>name</kbd> and <kbd>address</kbd> parameters, plus <kbd>v</kbd> for the view. Leave out <kbd>v</kbd> to add to <kbd>home</kbd>. The stop is saved as soon as the page loads, the two parameters are removed from the address bar, and a stop with the same name and address is never added twice. Stops added this way are always <strong>public</strong>. URL-encode each value: spaces become <kbd>%20</kbd>, commas <kbd>%2C</kbd>, and the <kbd>+</kbd> in a Plus Code must be <kbd>%2B</kbd>, or it's read as a space.
+                        Add a stop without using the form by opening an iaggio.com URL with <kbd>name</kbd> and <kbd>address</kbd> parameters, plus <kbd>v</kbd> for the view. Leave out <kbd>v</kbd> to add to <kbd>home</kbd>. The stop is saved as soon as the page loads, the two parameters are removed from the address bar, and a stop with the same name and address is never added twice. Stops added this way are always <strong>public</strong>. Add <kbd>locked=1</kbd> to make the stop <strong>locked</strong>: anyone can see it and route to it, but only a site administrator can edit or delete it. This only works on a cloud view while you're signed in; otherwise the stop is added as a normal, editable one. URL-encode each value: spaces become <kbd>%20</kbd>, commas <kbd>%2C</kbd>, and the <kbd>+</kbd> in a Plus Code must be <kbd>%2B</kbd>, or it's read as a space.
                         <span class="help-url-label">Add to your home list (this browser only)</span>
                         <code class="help-url">https://iaggio.com/?name=Space%20Needle&amp;address=400%20Broad%20St%2C%20Seattle%2C%20WA</code>
                         <span class="help-url-label">Add to a named cloud view</span>
@@ -2027,6 +2027,8 @@
                         <code class="help-url">https://iaggio.com/?v=nashville-2026&amp;name=Trailhead&amp;address=8FW4V75Q%2B8Q</code>
                         <span class="help-url-label">Add to a sub-view</span>
                         <code class="help-url">https://iaggio.com/?v=regions--chicago&amp;name=The%20Bean&amp;address=201%20E%20Randolph%20St%2C%20Chicago%2C%20IL</code>
+                        <span class="help-url-label">Add a locked stop (signed in)</span>
+                        <code class="help-url">https://iaggio.com/?v=nashville-2026&amp;name=Venue&amp;address=116%205th%20Ave%20N%2C%20Nashville%2C%20TN&amp;locked=1</code>
                     </div>
                 </div>
 
@@ -2067,6 +2069,8 @@
         const _urlName  = (_urlParams.get('v')       || '').trim();
         const _autoName = (_urlParams.get('name')    || '').trim();
         const _autoAddr = (_urlParams.get('address') || '').trim();
+        // &locked=1 on an auto-add creates a locked (non-editable) public stop
+        const _autoLocked = ['1', 'true', 'yes'].includes((_urlParams.get('locked') || '').trim().toLowerCase());
 
         // Single-record display: ?locationId={zen} fetches one exact record
         const _singleZen  = (_urlParams.get('locationId') || '').trim();
@@ -2698,21 +2702,26 @@
             );
 
             if (!exists) {
+                // Same rule as the Access toggle: locking needs a signed-in cloud view
+                const toCloud = !USE_LOCAL && _viewLabel !== 'home';
+                const locked = _autoLocked && toCloud && !!authCode;
                 try {
-                    const saved = await recordAdd(cleanName, cleanAddr, '', _viewLabel);
+                    const saved = await recordAdd(cleanName, cleanAddr, '', _viewLabel, false, locked);
                     locations.push(saved);
                     sortLocations();
                     renderCards();
-                    toast(`Added: ${cleanName}`, 'success');
+                    toast(`Added${saved.restricted ? ' (locked)' : ''}: ${cleanName}`, 'success');
+                    if (_autoLocked && toCloud && !authCode) toast('Sign in to add locked stops — added as editable', 'warning');
                 } catch (e) {
                     toast('Auto-add failed: ' + e.message, 'error');
                 }
             }
 
-            // Strip name & address from URL, keep everything else (v, etc.)
+            // Strip name, address & locked from URL, keep everything else (v, etc.)
             const clean = new URL(window.location.href);
             clean.searchParams.delete('name');
             clean.searchParams.delete('address');
+            clean.searchParams.delete('locked');
             history.replaceState(null, '', clean.toString());
             updatePageTitle();
         }
