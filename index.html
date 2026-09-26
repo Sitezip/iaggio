@@ -40,7 +40,8 @@
             --danger-dim: #3a0f0f;
             --warn: #ffb74d;
             --private: #c792ea;
-            --private-dim: rgba(199, 146, 234, 0.1);            --text: #cde2f8;
+            --private-dim: rgba(199, 146, 234, 0.1);
+            --text: #cde2f8;
             --text-dim: #7da0cc;
             --text-bright: #eaf3ff;
             --mono: 'Source Code Pro', monospace;
@@ -68,7 +69,8 @@
             --danger-dim: #fde8e8;
             --warn: #e65100;
             --private: #7b3fb0;
-            --private-dim: rgba(123, 63, 176, 0.08);            --text: #1e2f50;
+            --private-dim: rgba(123, 63, 176, 0.08);
+            --text: #1e2f50;
             --text-dim: #4a6a9a;
             --text-bright: #0d1e3c;
         }
@@ -495,36 +497,12 @@
             opacity: 1;
         }
 
-        .card-type-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.35rem;
-            font-family: var(--mono);
-            font-size: 0.72rem;
-            letter-spacing: 0.12em;
-            text-transform: uppercase;
-            padding: 0.22rem 0.6rem;
-            border-radius: 20px;
-            width: fit-content;
-        }
-
-        .badge-address {
-            background: rgba(160, 208, 255, 0.08);
-            color: var(--blue);
-            border: 1px solid rgba(160, 208, 255, 0.2);
-        }
-
-        .badge-pluscode {
-            background: var(--accent-glow);
+        /* address / plus code icon, inline before the name */
+        .card-type-icon {
             color: var(--accent);
-            border: 1px solid rgba(77, 168, 255, 0.25);
-        }
-
-        .badge-private {
-            background: var(--private-dim);
-            color: var(--private);
-            border: 1px solid var(--private);
-            margin-left: 0.35rem;
+            font-size: 0.75em;
+            margin-right: 0.45rem;
+            vertical-align: 0.12em;
         }
 
         .card-readonly-note {
@@ -632,7 +610,8 @@
             overflow: hidden;
             text-overflow: ellipsis;
             line-height: 1.2;
-            margin-top: 1.2rem;
+            /* clears the 26px corner button group */
+            margin-top: calc(26px + 0.6rem);
         }
 
         .card-location {
@@ -1239,10 +1218,18 @@
         }
 
         /* ── Waypoint toggle on card ── */
-        .btn-waypoint {
+        /* ── Card corner button group: [Open] [single] [route] ── */
+        .card-corner {
             position: absolute;
             top: 0.85rem;
             right: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+            z-index: 2;
+        }
+
+        .btn-waypoint {
             width: 26px;
             height: 26px;
             border-radius: 50%;
@@ -1258,7 +1245,6 @@
             font-weight: 700;
             line-height: 1;
             transition: all 0.15s;
-            z-index: 2;
         }
 
         .btn-waypoint:hover {
@@ -1499,25 +1485,23 @@
 
         /* ── Sub-view drill-down button on card ── */
         .btn-subview {
-            position: absolute;
-            top: 0.85rem;
-            right: 2.85rem;
-            width: 26px;
             height: 26px;
-            border-radius: 50%;
+            padding: 0 0.65rem;
+            border-radius: 13px;
             border: 1px solid var(--border);
             background: var(--bg2);
             color: var(--text-dim);
             cursor: pointer;
             display: flex;
             align-items: center;
-            justify-content: center;
-            font-size: 0.65rem;
+            gap: 0.35rem;
+            font-size: 0.72rem;
             font-family: var(--mono);
             font-weight: 700;
+            letter-spacing: 0.06em;
             line-height: 1;
+            text-decoration: none;
             transition: all 0.15s;
-            z-index: 2;
         }
 
         .btn-subview:hover {
@@ -1528,9 +1512,6 @@
 
         /* ── Single-record link button on card ── */
         .btn-single {
-            position: absolute;
-            top: 0.85rem;
-            right: 4.85rem;
             width: 26px;
             height: 26px;
             border-radius: 50%;
@@ -1546,13 +1527,7 @@
             font-weight: 700;
             line-height: 1;
             transition: all 0.15s;
-            z-index: 2;
             text-decoration: none;
-        }
-
-        /* no sub-view button present → slide into its slot */
-        .btn-single.no-subview {
-            right: 2.85rem;
         }
 
         .btn-single:hover {
@@ -1638,6 +1613,48 @@
             font-size: 0.72rem;
             letter-spacing: 0.12em;
             color: var(--text-dim);
+        }
+
+        /* ── Social stops (footer, from public-list.json) ── */
+        .social-stops {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .social-stops-label {
+            text-transform: uppercase;
+            color: var(--text-dim);
+            margin-right: 0.25rem;
+        }
+
+        .social-stops-label i {
+            color: var(--accent);
+            margin-right: 0.35rem;
+        }
+
+        .social-stop {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.3rem 0.75rem;
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            background: var(--surface);
+            color: var(--accent);
+            text-decoration: none;
+            letter-spacing: 0.06em;
+            transition: border-color 0.15s, background 0.15s;
+        }
+
+        .social-stop:hover,
+        .social-stop[aria-current="page"] {
+            border-color: var(--accent);
+            background: var(--accent-glow);
+            color: var(--accent);
         }
 
         /* ── Responsive ── */
@@ -1945,7 +1962,7 @@
                 <div class="help-section">
                     <div class="help-section-icon"><i class="fa-solid fa-location-dot"></i></div>
                     <div class="help-section-title">Adding a Location</div>
-                    <div class="help-section-text">Enter a <strong>Name</strong> and an <strong>Address</strong> or <strong>Plus Code</strong>, plus an optional short <strong>Note</strong>, then click <kbd><i class="fa-solid fa-map-location-dot"></i> Add</kbd>. Use the <kbd><i class="fa-solid fa-eye"></i> Test</kbd> button to open the address in Google Maps and verify it before saving. When you're signed in on a cloud view, a <em>Visibility</em> dropdown lets you save the location as <strong>Public</strong> or <strong>Private</strong> (see <em>Accounts &amp; Private Locations</em> below).</div>
+                    <div class="help-section-text">Enter a <strong>Name</strong> and an <strong>Address</strong> or <strong>Plus Code</strong>, plus an optional short <strong>Note</strong>, then click <kbd><i class="fa-solid fa-map-location-dot"></i> Add</kbd>. Use the <kbd><i class="fa-solid fa-eye"></i> Test</kbd> button to open the address in Google Maps and verify it before saving. On each card, the small icon before the name shows what was saved: <kbd><i class="fa-solid fa-map-marker-alt"></i></kbd> for an address, <kbd><i class="fa-solid fa-th"></i></kbd> for a Plus Code. When you're signed in on a cloud view, a <em>Visibility</em> dropdown lets you save the location as <strong>Public</strong> or <strong>Private</strong> (see <em>Accounts &amp; Private Locations</em> below).</div>
                 </div>
 
                 <div class="help-divider"></div>
@@ -1961,7 +1978,7 @@
                 <div class="help-section">
                     <div class="help-section-icon"><i class="fa-solid fa-map-signs"></i></div>
                     <div class="help-section-title">Multi-Stop Routes</div>
-                    <div class="help-section-text">Click the circular <kbd><i class="fa-solid fa-route"></i></kbd> toggle in the top-right of each card to add it as a waypoint. Cards are numbered in the order you select them. A route bar appears at the bottom showing the sequence. Hit <kbd><i class="fa-solid fa-route"></i> Navigate</kbd> on any card to set it as the destination and launch the full route in Google Maps. Click <kbd>Clear</kbd> in the route bar to reset.</div>
+                    <div class="help-section-text">Click the circular <kbd><i class="fa-solid fa-compass"></i></kbd> toggle, the right-most button in each card's top-right corner, to add it as a waypoint. Cards are numbered in the order you select them. A route bar appears at the bottom showing the sequence. Hit <kbd><i class="fa-solid fa-route"></i> Navigate</kbd> on any card to set it as the destination and launch the full route in Google Maps. Click <kbd>Clear</kbd> in the route bar to reset.</div>
                 </div>
 
                 <div class="help-divider"></div>
@@ -1993,7 +2010,7 @@
                 <div class="help-section">
                     <div class="help-section-icon"><i class="fa-solid fa-user-lock"></i></div>
                     <div class="help-section-title">Accounts &amp; Private Locations</div>
-                    <div class="help-section-text">Click <kbd><i class="fa-solid fa-user"></i></kbd> in the header to <strong>Sign In</strong> or <strong>Sign Up</strong> with an email and password; the icon changes to <kbd><i class="fa-solid fa-user-check"></i></kbd> while you're signed in, and clicking it again lets you sign out. While signed in on a cloud view, the Add panel offers a <em>Visibility</em> choice: <strong>Private</strong> locations are visible only to your account (marked with a <kbd><i class="fa-solid fa-lock"></i> Private</kbd> badge), while <strong>Public</strong> ones are visible to anyone with the view name. The <kbd><i class="fa-solid fa-lock-open"></i> Public</kbd> / <kbd><i class="fa-solid fa-lock"></i> Private</kbd> button on each card switches it: <em>Move</em> re-creates it with the new visibility and removes the original, while <em>Copy</em> adds a duplicate and keeps the original. Locations in <kbd>home</kbd> stay in your browser and are always private to this device.</div>
+                    <div class="help-section-text">Click <kbd><i class="fa-solid fa-user"></i></kbd> in the header to <strong>Sign In</strong> or <strong>Sign Up</strong> with an email and password; the icon changes to <kbd><i class="fa-solid fa-user-check"></i></kbd> while you're signed in, and clicking it again lets you sign out. Signing out, or having your session expire, clears your sign-in and reloads iaggio.com at the <kbd>home</kbd> view; your <kbd>home</kbd> locations stay on this device. While signed in on a cloud view, the Add panel offers a <em>Visibility</em> choice: <strong>Private</strong> locations are visible only to your account, while <strong>Public</strong> ones are visible to anyone with the view name. The <kbd><i class="fa-solid fa-lock-open"></i> Public</kbd> / <kbd><i class="fa-solid fa-lock"></i> Private</kbd> button on each card switches it: <em>Move</em> re-creates it with the new visibility and removes the original, while <em>Copy</em> adds a duplicate and keeps the original. Locations in <kbd>home</kbd> stay in your browser and are always private to this device.</div>
                 </div>
 
                 <div class="help-divider"></div>
@@ -2001,7 +2018,7 @@
                 <div class="help-section">
                     <div class="help-section-icon"><i class="fa-solid fa-arrow-down"></i></div>
                     <div class="help-section-title">Sub-Views</div>
-                    <div class="help-section-text">The <kbd><i class="fa-solid fa-arrow-down"></i></kbd> button on each card opens a child view named after that card — the URL becomes <kbd>?v=parentview--childname</kbd>. A breadcrumb at the top lets you navigate back up the hierarchy. This lets you organise locations as a tree: a regional view whose cards drill into city-level lists, a project view that fans out into site lists, and so on.</div>
+                    <div class="help-section-text">The <kbd>Open <i class="fa-solid fa-folder-open"></i></kbd> button, the first button in each card's top-right corner, opens a child view named after that card — the URL becomes <kbd>?v=parentview--childname</kbd>. A breadcrumb at the top lets you navigate back up the hierarchy. This lets you organise locations as a tree: a regional view whose cards drill into city-level lists, a project view that fans out into site lists, and so on.</div>
                 </div>
 
                 <div class="help-divider"></div>
@@ -2051,6 +2068,8 @@
 
     <!-- Footer -->
     <footer>
+        <!-- Social Stops: public views listed in public-list.json -->
+        <nav id="socialStops" class="container social-stops" aria-label="Social stops" style="display:none;"></nav>
         <div class="container">
             &copy; Brackets LLC <span id="footerYear"></span>
         </div>
@@ -2430,7 +2449,11 @@
             }
         }
 
-        // Sign-out is unconditional: the local code is dropped even if the call fails
+        const NOTICE_KEY = 'iaggio_notice';
+
+        // Sign-out is unconditional: the local code is dropped even if the call fails.
+        // Then every cache is cleared and the page reloads fresh at the site root.
+        // The local `home` list and theme are device data, not session data, so they stay.
         async function signOut(reason) {
             const code = authCode;
             clearInterval(_heartbeat);
@@ -2447,10 +2470,29 @@
                     });
                 } catch (_) { /* best-effort */ }
             }
-            closeAuthModal();
-            renderAuthUI();
-            toast(reason || 'Signed out', reason ? 'warning' : 'success');
-            reloadForAuthChange();
+            await clearCaches();
+            // Carry the message across the reload so it can still be shown
+            try { sessionStorage.setItem(NOTICE_KEY, JSON.stringify({ msg: reason || 'Signed out', type: reason ? 'warning' : 'success' })); } catch (_) { /* ignore */ }
+            window.location.replace('/');
+        }
+
+        async function clearCaches() {
+            try { sessionStorage.clear(); } catch (_) { /* ignore */ }
+            try {
+                if ('caches' in window) {
+                    const keys = await caches.keys();
+                    await Promise.all(keys.map(k => caches.delete(k)));
+                }
+            } catch (_) { /* ignore */ }
+        }
+
+        // Shows (once) a message left by signOut before the reload
+        function showPendingNotice() {
+            try {
+                const n = JSON.parse(sessionStorage.getItem(NOTICE_KEY) || 'null');
+                sessionStorage.removeItem(NOTICE_KEY);
+                if (n?.msg) toast(n.msg, n.type);
+            } catch (_) { /* ignore */ }
         }
 
         function startHeartbeat() {
@@ -3003,12 +3045,10 @@
                 const viewTag = MULTI_VIEW
                     ? `<span class="card-view-tag" title="${esc(l.viewName)}">${esc(l.viewName)}</span>`
                     : '';
-                const badge = isPlus
-                    ? `<span class="card-type-badge badge-pluscode"><i class="fa-solid fa-th"></i> Plus Code</span>`
-                    : `<span class="card-type-badge badge-address"><i class="fa-solid fa-map-marker-alt"></i> Address</span>`;
-                const privateBadge = l.isPrivate
-                    ? `<span class="card-type-badge badge-private" title="Only visible to your account"><i class="fa-solid fa-lock"></i> Private</span>`
-                    : '';
+                // fa-fw keeps the icon a fixed width so names line up across cards
+                const typeIcon = isPlus
+                    ? `<i class="fa-solid fa-fw fa-th card-type-icon" title="Plus Code"></i>`
+                    : `<i class="fa-solid fa-fw fa-map-marker-alt card-type-icon" title="Address"></i>`;
                 const canModify = !SINGLE_VIEW && (!l.restricted || canManageLocked());
                 // Cloud records only — home/local records have no public/private
                 const visBtn = (!SINGLE_VIEW && !USE_LOCAL && l.viewName !== 'home' && authCode)
@@ -3018,30 +3058,31 @@
                     : '';
                 const _svName = (!SINGLE_VIEW && !USE_LOCAL && !MULTI_VIEW) ? sanitizeViewName(l.name) : '';
                 const subViewBtn = _svName
-                    ? `<a class="btn-subview" href="?v=${encodeURIComponent(_viewLabel + '--' + _svName)}" title="Open sub-view: ${esc(_svName)}"><i class="fa-solid fa-arrow-down"></i></a>`
+                    ? `<a class="btn-subview" href="?v=${encodeURIComponent(_viewLabel + '--' + _svName)}" title="Open sub-view: ${esc(_svName)}">OPEN <i class="fa-solid fa-folder-open"></i></a>`
                     : '';
                 const waypointBtn = SINGLE_VIEW
                     ? ''
                     : `<button class="btn-waypoint${isWaypoint ? ' active' : ''}"
                     onclick="toggleWaypoint('${esc(l.zen)}')"
                     title="${isWaypoint ? 'Remove from route' : 'Add to route'}">
-              ${isWaypoint ? wpIdx + 1 : '<i class="fa-solid fa-route"></i>'}
+              ${isWaypoint ? wpIdx + 1 : '<i class="fa-solid fa-compass"></i>'}
             </button>`;
                 const singleBtn = (SINGLE_VIEW || USE_LOCAL)
                     ? ''
-                    : `<a class="btn-single${_svName ? '' : ' no-subview'}" href="?locationId=${encodeURIComponent(l.zen)}" title="View this location only"><i class="fa-solid fa-up-right-from-square"></i></a>`;
+                    : `<a class="btn-single" href="?locationId=${encodeURIComponent(l.zen)}" title="View this location only"><i class="fa-solid fa-up-right-from-square"></i></a>`;
 
                 return `
         <div class="col-sm-6 col-lg-4">
           <div class="loc-card${isWaypoint ? ' is-waypoint' : ''}" data-zen="${esc(l.zen)}" style="animation-delay:${i * 0.04}s">
 
-            ${waypointBtn}
-            ${subViewBtn}
-            ${singleBtn}
+            <div class="card-corner">
+              ${subViewBtn}
+              ${singleBtn}
+              ${waypointBtn}
+            </div>
 
             <div class="view-section">
-              ${badge}${privateBadge}
-              <div class="card-name" title="${esc(l.name)}">${esc(l.name)}</div>
+              <div class="card-name" title="${esc(l.name)}">${typeIcon}${esc(l.name)}</div>
               <div class="card-location" title="${esc(l.location)}">${esc(l.location)}</div>
               ${l.note ? `<div class="card-note">${esc(l.note)}</div>` : ''}
               <div class="maps-row">
@@ -3202,6 +3243,32 @@
             el.style.display = '';
         }
 
+        // ── SOCIAL STOPS ─────────────────────────────────────────────────
+        // Footer links to public views, listed in public-list.json (edited by hand):
+        //   [{ "view": "yardsales--USA", "label": "Yard Sales › USA", "icon": "fa-tags" }]
+        // label is optional (defaults to the view with -- shown as ›); icon is an
+        // optional Font Awesome class. Any failure just leaves the section hidden.
+        async function loadSocialStops() {
+            const nav = document.getElementById('socialStops');
+            try {
+                const res = await fetch('public-list.json', { cache: 'no-cache' });
+                if (!res.ok) return;
+                const list = await res.json();
+                const items = (Array.isArray(list) ? list : [])
+                    .filter(s => s && typeof s.view === 'string' && s.view.trim())
+                    .map(s => {
+                        const view = s.view.trim();
+                        const label = (typeof s.label === 'string' && s.label.trim()) || view.split('--').join(' › ');
+                        const icon = /^fa-[a-z0-9-]+$/.test(s.icon || '') ? s.icon : 'fa-map-pin';
+                        const current = view === _urlName ? ' aria-current="page"' : '';
+                        return `<a class="social-stop" href="?v=${encodeURIComponent(view)}"${current}><i class="fa-solid ${icon}"></i>${esc(label)}</a>`;
+                    });
+                if (!items.length) return;
+                nav.innerHTML = `<span class="social-stops-label"><i class="fa-solid fa-users"></i>Social Stops</span>${items.join('')}`;
+                nav.style.display = '';
+            } catch (_) { /* leave hidden */ }
+        }
+
         // ── THEME ────────────────────────────────────────────────────────
         const _themeKey = 'iaggio_theme';
 
@@ -3231,8 +3298,10 @@
         applyTheme(localStorage.getItem(_themeKey) || 'dark');
         updatePageTitle();
         renderAuthUI();
+        showPendingNotice();
         if (authCode) { startHeartbeat(); checkSession(); }
         document.getElementById('footerYear').textContent = new Date().getFullYear();
+        loadSocialStops();
 
         if (history.length > 1) {
             document.getElementById('btnBack').style.display = '';
