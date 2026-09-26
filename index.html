@@ -39,6 +39,8 @@
             --danger: #ff5252;
             --danger-dim: #3a0f0f;
             --warn: #ffb74d;
+            --private: #c792ea;
+            --private-dim: rgba(199, 146, 234, 0.1);
             --text: #cde2f8;
             --text-dim: #7da0cc;
             --text-bright: #eaf3ff;
@@ -66,6 +68,8 @@
             --danger: #d32f2f;
             --danger-dim: #fde8e8;
             --warn: #e65100;
+            --private: #7b3fb0;
+            --private-dim: rgba(123, 63, 176, 0.08);
             --text: #1e2f50;
             --text-dim: #4a6a9a;
             --text-bright: #0d1e3c;
@@ -518,6 +522,24 @@
             border: 1px solid rgba(77, 168, 255, 0.25);
         }
 
+        .badge-private {
+            background: var(--private-dim);
+            color: var(--private);
+            border: 1px solid var(--private);
+            margin-left: 0.35rem;
+        }
+
+        .btn-icon.btn-visibility.is-private {
+            border-color: var(--private);
+            color: var(--private);
+        }
+
+        .btn-icon.btn-visibility:hover {
+            border-color: var(--private);
+            color: var(--private);
+            background: var(--private-dim);
+        }
+
         .card-name {
             font-family: var(--display);
             font-size: 1.45rem;
@@ -917,6 +939,48 @@
             background: var(--danger-dim);
         }
 
+        /* ── Auth / visibility modals ── */
+        .auth-panel {
+            max-width: 400px;
+        }
+
+        .btn-help.signed-in {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .auth-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.4rem;
+        }
+
+        .auth-actions .btn-test {
+            justify-content: center;
+            flex: 1 1 0;
+        }
+
+        .auth-status {
+            font-family: var(--body);
+            font-size: 0.92rem;
+            color: var(--text);
+            overflow-wrap: anywhere;
+        }
+
+        .auth-status strong {
+            color: var(--text-bright);
+        }
+
+        .auth-hint {
+            font-size: 0.78rem;
+            color: var(--text-dim);
+            line-height: 1.5;
+        }
+
+        .auth-panel .form-error {
+            margin-top: 0;
+        }
+
         .help-body {
             padding: 1.2rem 1.4rem 1.4rem;
             overflow-y: auto;
@@ -982,6 +1046,30 @@
             font-family: var(--mono);
             font-size: 0.78rem;
             color: var(--accent);
+        }
+
+        .help-url-label {
+            display: block;
+            margin-top: 0.65rem;
+            font-family: var(--mono);
+            font-size: 0.68rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--text-dim);
+        }
+
+        .help-url {
+            display: block;
+            margin-top: 0.25rem;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 0.35rem 0.5rem;
+            font-family: var(--mono);
+            font-size: 0.74rem;
+            color: var(--accent);
+            word-break: break-all;
+            user-select: all;
         }
 
         .help-divider {
@@ -1587,6 +1675,9 @@
                 <button class="btn-help" onclick="openHelpModal()" title="How to use">
                     <i class="fa-solid fa-circle-question"></i>
                 </button>
+                <button id="btnAuth" class="btn-help" onclick="openAuthModal()" title="Sign in">
+                    <i class="fa-solid fa-user"></i>
+                </button>
                 <div class="loc-badge">
                     <i class="fa-solid fa-layer-group"></i>
                     <strong id="locCount">—</strong><span class="badge-label">&nbsp;saved</span>
@@ -1633,6 +1724,13 @@
                         <label class="form-label">Save to View</label>
                         <select id="inTargetView" class="form-control"></select>
                     </div>
+                    <div class="col-12 col-md-2" id="visibilityCol" style="display:none;">
+                        <label class="form-label">Visibility</label>
+                        <select id="inVisibility" class="form-control">
+                            <option value="public">Public</option>
+                            <option value="private">Private</option>
+                        </select>
+                    </div>
                     <div class="col-12 col-md-auto">
                         <div class="d-flex gap-2">
                             <button id="btnAdd" class="btn-primary-custom flex-fill" onclick="addLocation()">
@@ -1664,6 +1762,66 @@
 
         </div>
     </main>
+
+    <!-- Auth Modal -->
+    <div id="authModal" class="help-backdrop" style="display:none;" onclick="onAuthBackdropClick(event)">
+        <div class="help-panel auth-panel">
+            <div class="help-header">
+                <span class="help-title"><i class="fa-solid fa-user"></i> <span id="authTitle">Sign In</span></span>
+                <button class="btn-help-close" onclick="closeAuthModal()"><i class="fa-solid fa-times"></i></button>
+            </div>
+            <div class="help-body" id="authSignedOut">
+                <div>
+                    <label class="form-label" for="authUser">Email</label>
+                    <input id="authUser" type="email" class="form-control" autocomplete="username" placeholder="you@example.com" />
+                </div>
+                <div>
+                    <label class="form-label" for="authPass">Password</label>
+                    <input id="authPass" type="password" class="form-control" autocomplete="current-password" />
+                </div>
+                <div id="authError" class="form-error"></div>
+                <div class="auth-actions">
+                    <button id="btnSignIn" class="btn-primary-custom" onclick="submitAuth('signIn')">
+                        <i class="fa-solid fa-right-to-bracket"></i> Sign In
+                    </button>
+                    <button id="btnSignUp" class="btn-test" onclick="submitAuth('signUp')">
+                        <i class="fa-solid fa-user-plus"></i> Sign Up
+                    </button>
+                </div>
+                <div class="auth-hint">Signing in lets you save <strong>private</strong> locations in cloud views — only your account can see them. Public locations stay visible to anyone with the view name.</div>
+            </div>
+            <div class="help-body" id="authSignedIn" style="display:none;">
+                <div class="auth-status">Signed in as <strong id="authWho"></strong></div>
+                <div class="auth-actions">
+                    <button class="btn-test" onclick="signOut()">
+                        <i class="fa-solid fa-right-from-bracket"></i> Sign Out
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Visibility Modal -->
+    <div id="visModal" class="help-backdrop" style="display:none;" onclick="onVisBackdropClick(event)">
+        <div class="help-panel auth-panel">
+            <div class="help-header">
+                <span class="help-title"><i id="visIcon" class="fa-solid fa-lock"></i> <span id="visTitle">Make Private</span></span>
+                <button class="btn-help-close" onclick="closeVisModal()"><i class="fa-solid fa-times"></i></button>
+            </div>
+            <div class="help-body">
+                <div class="auth-status" id="visText"></div>
+                <div class="auth-actions">
+                    <button id="btnVisMove" class="btn-primary-custom" onclick="changeVisibility('move')">
+                        <i class="fa-solid fa-right-left"></i> Move
+                    </button>
+                    <button id="btnVisCopy" class="btn-test" onclick="changeVisibility('copy')">
+                        <i class="fa-regular fa-copy"></i> Copy
+                    </button>
+                </div>
+                <div class="auth-hint"><strong>Move</strong> re-creates the location with the new visibility and deletes the original. <strong>Copy</strong> keeps the original and adds a duplicate with the new visibility.</div>
+            </div>
+        </div>
+    </div>
 
     <!-- Help Modal -->
     <div id="helpModal" class="help-backdrop" style="display:none;" onclick="onBackdropClick(event)">
@@ -1697,7 +1855,7 @@
                 <div class="help-section">
                     <div class="help-section-icon"><i class="fa-solid fa-location-dot"></i></div>
                     <div class="help-section-title">Adding a Location</div>
-                    <div class="help-section-text">Enter a <strong>Name</strong> and an <strong>Address</strong> or <strong>Plus Code</strong>, then click <kbd><i class="fa-solid fa-plus"></i> Add</kbd>. Use the <kbd><i class="fa-solid fa-map-location-dot"></i></kbd> Test button to open the address in Google Maps and verify it before saving.</div>
+                    <div class="help-section-text">Enter a <strong>Name</strong> and an <strong>Address</strong> or <strong>Plus Code</strong>, plus an optional short <strong>Note</strong>, then click <kbd><i class="fa-solid fa-map-location-dot"></i> Add</kbd>. Use the <kbd><i class="fa-solid fa-eye"></i> Test</kbd> button to open the address in Google Maps and verify it before saving. When you're signed in on a cloud view, a <em>Visibility</em> dropdown lets you save the location as <strong>Public</strong> or <strong>Private</strong> (see <em>Private Locations</em> below).</div>
                 </div>
 
                 <div class="help-divider"></div>
@@ -1705,7 +1863,7 @@
                 <div class="help-section">
                     <div class="help-section-icon"><i class="fa-solid fa-route"></i></div>
                     <div class="help-section-title">Navigating</div>
-                    <div class="help-section-text">Click <kbd><i class="fa-solid fa-route"></i> Navigate</kbd> on any card to open that location directly in Google Maps. If you have waypoints selected (see below), that location becomes the <strong>destination</strong> and the waypoints form the route in order.</div>
+                    <div class="help-section-text">Click <kbd><i class="fa-solid fa-route"></i> Navigate</kbd> on any card to open that location directly in Google Maps. If you have waypoints selected (see below), that location becomes the <strong>destination</strong> and the waypoints form the route in order. The <kbd><i class="fa-solid fa-eye"></i></kbd> button next to it just shows the location on the map, ignoring any waypoints.</div>
                 </div>
 
                 <div class="help-divider"></div>
@@ -1721,7 +1879,7 @@
                 <div class="help-section">
                     <div class="help-section-icon"><i class="fa-solid fa-pen"></i></div>
                     <div class="help-section-title">Editing &amp; Deleting</div>
-                    <div class="help-section-text">Each card has an <kbd><i class="fa-solid fa-pen"></i> Edit</kbd> button to update its name or location inline, and a <kbd><i class="fa-solid fa-trash-alt"></i> Delete</kbd> button to remove it permanently.</div>
+                    <div class="help-section-text">Each card has an <kbd><i class="fa-solid fa-pen"></i> Edit</kbd> button to update its name, location, or note inline, and a <kbd><i class="fa-solid fa-trash-alt"></i> Delete</kbd> button — click it again within a few seconds to confirm. Deleted locations disappear from the view right away.</div>
                 </div>
 
                 <div class="help-divider"></div>
@@ -1737,19 +1895,49 @@
                 <div class="help-section">
                     <div class="help-section-icon"><i class="fa-solid fa-link"></i></div>
                     <div class="help-section-title">Sharing a View</div>
-                    <div class="help-section-text">On any named view (not <kbd>home</kbd>), a short link is automatically generated near the top of the page. Click <kbd><i class="fa-regular fa-copy"></i> Copy</kbd> to copy it to your clipboard and share it with others.</div>
+                    <div class="help-section-text">On any named view (not <kbd>home</kbd>), a short link is automatically generated near the top of the page. Click <kbd><i class="fa-regular fa-copy"></i> Copy</kbd> to copy it to your clipboard and share it with others. To share just one location, use the <kbd><i class="fa-solid fa-up-right-from-square"></i></kbd> button in a card's corner — it opens a read-only page for that single location, with its own short link. Anyone with the view name can see its public locations, so pick a name that's hard to guess.</div>
                 </div>
 
+                <div class="help-divider"></div>
+
                 <div class="help-section">
-                    <div class="help-section-icon"><i class="fa-solid fa-folder-open"></i></div>
-                    <div class="help-section-title">Sub-Views</div>
-                    <div class="help-section-text">The <kbd><i class="fa-solid fa-folder-open"></i></kbd> button on each card opens a child view named after that card — the URL becomes <kbd>?v=parentview--childname</kbd>. A breadcrumb at the top lets you navigate back up the hierarchy. This lets you organise locations as a tree: a regional view whose cards drill into city-level lists, a project view that fans out into site lists, and so on.</div>
+                    <div class="help-section-icon"><i class="fa-solid fa-user-lock"></i></div>
+                    <div class="help-section-title">Accounts &amp; Private Locations</div>
+                    <div class="help-section-text">Click <kbd><i class="fa-solid fa-user"></i></kbd> in the header to <strong>Sign In</strong> or <strong>Sign Up</strong> with an email and password; the icon changes to <kbd><i class="fa-solid fa-user-check"></i></kbd> while you're signed in, and clicking it again lets you sign out. While signed in on a cloud view, the Add panel offers a <em>Visibility</em> choice: <strong>Private</strong> locations are visible only to your account (marked with a <kbd><i class="fa-solid fa-lock"></i> Private</kbd> badge), while <strong>Public</strong> ones are visible to anyone with the view name. The <kbd><i class="fa-solid fa-lock-open"></i> Public</kbd> / <kbd><i class="fa-solid fa-lock"></i> Private</kbd> button on each card switches it: <em>Move</em> re-creates it with the new visibility and removes the original, while <em>Copy</em> adds a duplicate and keeps the original. Locations in <kbd>home</kbd> stay in your browser and are always private to this device.</div>
                 </div>
+
+                <div class="help-divider"></div>
+
+                <div class="help-section">
+                    <div class="help-section-icon"><i class="fa-solid fa-arrow-down"></i></div>
+                    <div class="help-section-title">Sub-Views</div>
+                    <div class="help-section-text">The <kbd><i class="fa-solid fa-arrow-down"></i></kbd> button on each card opens a child view named after that card — the URL becomes <kbd>?v=parentview--childname</kbd>. A breadcrumb at the top lets you navigate back up the hierarchy. This lets you organise locations as a tree: a regional view whose cards drill into city-level lists, a project view that fans out into site lists, and so on.</div>
+                </div>
+
+                <div class="help-divider"></div>
 
                 <div class="help-section">
                     <div class="help-section-icon"><i class="fa-solid fa-layer-group"></i></div>
                     <div class="help-section-title">Multi-View</div>
                     <div class="help-section-text">Separate two or more view names with <kbd>||</kbd> in the view input (e.g. <kbd>office||warehouse</kbd>) to load them side by side. Cards from every view appear together, each tagged with its source. A <em>Save to View</em> dropdown appears in the Add panel so you can choose which view a new location is added to.</div>
+                </div>
+
+                <div class="help-divider"></div>
+
+                <div class="help-section">
+                    <div class="help-section-icon"><i class="fa-solid fa-link"></i></div>
+                    <div class="help-section-title">Adding Stops by URL</div>
+                    <div class="help-section-text">
+                        Add a stop without using the form by opening an iaggio.com URL with <kbd>name</kbd> and <kbd>address</kbd> parameters, plus <kbd>v</kbd> for the view. Leave out <kbd>v</kbd> to add to <kbd>home</kbd>. The stop is saved as soon as the page loads, the two parameters are removed from the address bar, and a stop with the same name and address is never added twice. Stops added this way are always <strong>public</strong>. URL-encode each value: spaces become <kbd>%20</kbd>, commas <kbd>%2C</kbd>, and the <kbd>+</kbd> in a Plus Code must be <kbd>%2B</kbd>, or it's read as a space.
+                        <span class="help-url-label">Add to your home list (this browser only)</span>
+                        <code class="help-url">https://iaggio.com/?name=Space%20Needle&amp;address=400%20Broad%20St%2C%20Seattle%2C%20WA</code>
+                        <span class="help-url-label">Add to a named cloud view</span>
+                        <code class="help-url">https://iaggio.com/?v=nashville-2026&amp;name=Ryman%20Auditorium&amp;address=116%205th%20Ave%20N%2C%20Nashville%2C%20TN</code>
+                        <span class="help-url-label">Add a Plus Code</span>
+                        <code class="help-url">https://iaggio.com/?v=nashville-2026&amp;name=Trailhead&amp;address=8FW4V75Q%2B8Q</code>
+                        <span class="help-url-label">Add to a sub-view</span>
+                        <code class="help-url">https://iaggio.com/?v=regions--chicago&amp;name=The%20Bean&amp;address=201%20E%20Randolph%20St%2C%20Chicago%2C%20IL</code>
+                    </div>
                 </div>
 
             </div>
@@ -1807,6 +1995,8 @@
         const CONFIG = {
             baseUrl: 'https://zzzap.io',
             group: 'iaggio.com',
+            // configs[].name whose .zcd holds this app's auth code after sign-in
+            authConfig: 'iaggio.com',
             // multi-view: individual sanitized names for load + dropdown
             // single view: [_viewLabel] so loadLocations works uniformly
             names: MULTI_VIEW
@@ -1892,66 +2082,103 @@
         }
 
         // ── API HELPERS ──────────────────────────────────────────────────
-        async function apiGet(endpoint) {
-            const res = await fetch(CONFIG.baseUrl + endpoint);
+        // withAuth appends the signed-in publicAuthCd last so it can't be overridden.
+        // On a write its presence is what makes the record private (owned by the
+        // account); withholding it makes the record public. On a read it is additive:
+        // public records plus the account's own private ones.
+        async function apiGet(endpoint, withAuth = false) {
+            let url = CONFIG.baseUrl + endpoint;
+            if (withAuth && authCode) {
+                url += (url.includes('?') ? '&' : '?') + 'publicAuthCd=' + encodeURIComponent(authCode);
+            }
+            const res = await fetch(url);
             if (!res.ok) throw new Error('HTTP ' + res.status);
             const data = await res.json();
-            if (!data.success) throw new Error(data.messages?.primary?.[0] || 'API error');
+            if (!data.success) throw new Error(data.messages?.primary?.[0] || data.errors?.primary?.[0] || 'API error');
             return data;
+        }
+
+        // Auth + utility endpoints are POST with the payload wrapped under `zzzap`
+        async function apiPost(endpoint, payload, withAuth = false) {
+            let url = CONFIG.baseUrl + endpoint;
+            if (withAuth && authCode) {
+                url += (url.includes('?') ? '&' : '?') + 'publicAuthCd=' + encodeURIComponent(authCode);
+            }
+            const res = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ zzzap: payload })
+            });
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            return await res.json();
+        }
+
+        // `private` is stored in the record's own json so the card can show it;
+        // the server-side ownership comes from publicAuthCd on the write.
+        function recordJson(record, isPrivate) {
+            return encodeURIComponent(JSON.stringify({
+                id: record.id, name: record.name, location: record.location,
+                note: record.note || '', private: !!isPrivate
+            }));
         }
 
         async function zenGet(viewName) {
             const data = await apiGet(
-                `/Collections/zenGet?group=${encodeURIComponent(CONFIG.group)}&name=${encodeURIComponent(viewName)}&limit=100`
+                `/Collections/zenGet?group=${encodeURIComponent(CONFIG.group)}&name=${encodeURIComponent(viewName)}&limit=100`,
+                true
             );
             return (data.response || []).map(r => ({
                 id: r.id, name: r.name, location: r.location,
-                note: r.note || '', zen: r.zen, viewName
+                note: r.note || '', zen: r.zen, viewName, isPrivate: !!r.private
             }));
         }
 
         async function zenGetSingle(zen) {
             const data = await apiGet(
-                `/Collections/zenGet?zen=${encodeURIComponent(zen)}&exactRecord=1`
+                `/Collections/zenGet?zen=${encodeURIComponent(zen)}&exactRecord=1`,
+                true
             );
             const r = (data.response || [])[0];
             if (!r) throw new Error('Record not found');
             return {
                 id: r.id, name: r.name, location: r.location,
-                note: r.note || '', zen: r.zen, viewName: _viewLabel
+                note: r.note || '', zen: r.zen, viewName: _viewLabel, isPrivate: !!r.private
             };
         }
 
-        async function zenPost(record, targetView) {
+        async function zenPost(record, targetView, isPrivate) {
             const vn = targetView || _viewLabel;
-            const json = encodeURIComponent(JSON.stringify({
-                id: record.id, name: record.name, location: record.location, note: record.note || ''
-            }));
+            if (isPrivate) await ensureSession();
             const data = await apiGet(
-                `/Collections/zenPost?group=${encodeURIComponent(CONFIG.group)}&name=${encodeURIComponent(vn)}&json=${json}`
+                `/Collections/zenPost?group=${encodeURIComponent(CONFIG.group)}&name=${encodeURIComponent(vn)}&json=${recordJson(record, isPrivate)}`,
+                !!isPrivate
             );
             const r = data.response[0];
-            return { id: r.id, name: r.name, location: r.location, note: r.note || '', zen: r.zen, viewName: MULTI_VIEW ? vn : _viewLabel };
+            return { id: r.id, name: r.name, location: r.location, note: r.note || '', zen: r.zen, viewName: MULTI_VIEW ? vn : _viewLabel, isPrivate: !!isPrivate };
         }
 
-        async function zenPut(zen, record) {
-            const json = encodeURIComponent(JSON.stringify({
-                id: record.id, name: record.name, location: record.location, note: record.note || ''
-            }));
+        async function zenPut(zen, record, isPrivate) {
+            if (isPrivate) await ensureSession();
             const data = await apiGet(
-                `/Collections/zenPut?zen=${encodeURIComponent(zen)}&json=${json}`
+                `/Collections/zenPut?zen=${encodeURIComponent(zen)}&json=${recordJson(record, isPrivate)}`,
+                !!isPrivate
             );
             const r = data.response[0];
             const src = locations.find(l => l.zen === zen)?.viewName || _viewLabel;
-            return { id: r.id, name: r.name, location: r.location, note: r.note || '', zen: r.zen, viewName: src };
+            return { id: r.id, name: r.name, location: r.location, note: r.note || '', zen: r.zen, viewName: src, isPrivate: !!isPrivate };
         }
 
-        async function zenDelete(zen) {
-            await apiGet(`/Collections/zenDelete?zen=${encodeURIComponent(zen)}`);
+        // Public records are soft-deleted (flagged, not removed); private ones are
+        // hard-deleted. Omit softDelete rather than sending "false".
+        async function zenDelete(zen, isPrivate) {
+            await apiGet(
+                `/Collections/zenDelete?zen=${encodeURIComponent(zen)}${isPrivate ? '' : '&softDelete=true'}`,
+                !!isPrivate
+            );
         }
 
         // ── CRUD DISPATCH ────────────────────────────────────────────────
-        async function recordAdd(name, location, note, targetView) {
+        async function recordAdd(name, location, note, targetView, isPrivate = false) {
             const cleanNote = stripHtml(note);
             if (USE_LOCAL || targetView === 'home') {
                 const record = { id: uid(), name, location, note: cleanNote, zen: uid(), viewName: 'home' };
@@ -1960,7 +2187,8 @@
                 saveLocalLocs(locs);
                 return record;
             }
-            return await zenPost({ id: uid(), name, location, note: cleanNote }, targetView);
+            if (isPrivate && !authCode) throw new Error('Sign in to save private locations');
+            return await zenPost({ id: uid(), name, location, note: cleanNote }, targetView, isPrivate);
         }
 
         async function recordUpdate(zen, name, location, note) {
@@ -1972,7 +2200,7 @@
                 saveLocalLocs(locations);
                 return { ...rec };
             }
-            return await zenPut(zen, { id: rec.id, name, location, note: cleanNote });
+            return await zenPut(zen, { id: rec.id, name, location, note: cleanNote }, rec.isPrivate);
         }
 
         async function recordDelete(zen) {
@@ -1981,7 +2209,260 @@
                 saveLocalLocs(locations.filter(l => l.zen !== zen));
                 return;
             }
-            await zenDelete(zen);
+            await zenDelete(zen, rec?.isPrivate);
+        }
+
+        // ── AUTH ─────────────────────────────────────────────────────────
+        const AUTH_KEY = 'iaggio_auth';
+        let authCode = null;
+        let authUser = '';
+        let _heartbeat = null;
+
+        (function restoreAuth() {
+            try {
+                const saved = JSON.parse(localStorage.getItem(AUTH_KEY) || 'null');
+                if (saved?.code) { authCode = saved.code; authUser = saved.user || ''; }
+            } catch (_) { /* ignore */ }
+        })();
+
+        function persistAuth() {
+            if (authCode) localStorage.setItem(AUTH_KEY, JSON.stringify({ code: authCode, user: authUser }));
+            else localStorage.removeItem(AUTH_KEY);
+        }
+
+        function flattenMsgs(obj) {
+            return Object.values(obj || {}).filter(Array.isArray).flat();
+        }
+
+        // The code lives on configs[].zcd, keyed by this app's config name.
+        // Falls back to the first config carrying a code if the name doesn't match.
+        function extractAuthCode(entities) {
+            const configs = entities?.user?.configs;
+            if (!Array.isArray(configs)) return null;
+            const hit = configs.find(c => c?.name === CONFIG.authConfig) || configs.find(c => c?.zcd);
+            return hit?.zcd || null;
+        }
+
+        async function authRequest(action, user, password) {
+            const enc = await apiPost('/Utilities/codes/zzzapIt', { text: password, life: 3600 });
+            const pass = enc?.response;
+            if (!enc?.success || typeof pass !== 'string') throw new Error('Could not encrypt password');
+
+            const data = await apiPost('/Auth/remote/' + action, { user, pass });
+            // Auth responses nest the success flag one level down
+            if (data?.response?.success !== true) {
+                const msg = flattenMsgs(data?.errors)[0] || flattenMsgs(data?.messages)[0];
+                throw new Error(msg || (action === 'signUp' ? 'Sign up failed' : 'Sign in failed'));
+            }
+            return data.response.entities;
+        }
+
+        async function submitAuth(action) {
+            const userEl = document.getElementById('authUser');
+            const passEl = document.getElementById('authPass');
+            const errEl  = document.getElementById('authError');
+            const user = userEl.value.trim();
+            const password = passEl.value;
+
+            if (!user || !password) {
+                errEl.textContent = 'Email and password are required.';
+                errEl.style.display = 'block';
+                return;
+            }
+            errEl.style.display = 'none';
+
+            const btns = [document.getElementById('btnSignIn'), document.getElementById('btnSignUp')];
+            btns.forEach(b => b.disabled = true);
+            try {
+                let entities = await authRequest(action, user, password);
+                let code = extractAuthCode(entities);
+                // A fresh sign-up may not hand back a session — sign in to get one
+                if (!code && action === 'signUp') {
+                    entities = await authRequest('signIn', user, password);
+                    code = extractAuthCode(entities);
+                }
+                if (!code) throw new Error('Signed in, but this account has no iaggio.com access');
+
+                authCode = code;
+                authUser = user;
+                persistAuth();
+                passEl.value = '';
+                startHeartbeat();
+                closeAuthModal();
+                renderAuthUI();
+                toast(action === 'signUp' ? 'Account created — signed in' : 'Signed in', 'success');
+                reloadForAuthChange();
+            } catch (e) {
+                errEl.textContent = e.message;
+                errEl.style.display = 'block';
+            } finally {
+                btns.forEach(b => b.disabled = false);
+            }
+        }
+
+        // Sign-out is unconditional: the local code is dropped even if the call fails
+        async function signOut(reason) {
+            const code = authCode;
+            clearInterval(_heartbeat);
+            _heartbeat = null;
+            authCode = null;
+            authUser = '';
+            persistAuth();
+            if (code) {
+                try {
+                    await fetch(CONFIG.baseUrl + '/Auth/remote/signOut?publicAuthCd=' + encodeURIComponent(code), {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ zzzap: {} })
+                    });
+                } catch (_) { /* best-effort */ }
+            }
+            closeAuthModal();
+            renderAuthUI();
+            toast(reason || 'Signed out', reason ? 'warning' : 'success');
+            reloadForAuthChange();
+        }
+
+        function startHeartbeat() {
+            clearInterval(_heartbeat);
+            _heartbeat = setInterval(checkSession, 5 * 60 * 1000);
+        }
+
+        // Resolves true while the session is live. A dead code makes whoAmI redirect
+        // to /Auth/empty ("not logged in"), which apiGet rejects.
+        async function checkSession() {
+            if (!authCode) return false;
+            try {
+                await apiGet('/Admin/whoAmI', true);
+                return true;
+            } catch (e) {
+                // A network failure (fetch TypeError) isn't proof the session died
+                if (e.name === 'TypeError') return true;
+                signOut('Session expired — please sign in again');
+                return false;
+            }
+        }
+
+        // The server ignores an invalid publicAuthCd and writes the record as
+        // PUBLIC, so every authenticated write must confirm the session first.
+        async function ensureSession() {
+            if (!(await checkSession())) throw new Error('Session expired — sign in again');
+        }
+
+        // Private records only come back on an authenticated read, so reload the view
+        function reloadForAuthChange() {
+            if (USE_LOCAL) return;
+            waypoints = [];
+            renderRouteBar();
+            if (SINGLE_VIEW) loadSingleLocation();
+            else loadLocations();
+        }
+
+        function renderAuthUI() {
+            const btn = document.getElementById('btnAuth');
+            btn.classList.toggle('signed-in', !!authCode);
+            btn.innerHTML = authCode ? '<i class="fa-solid fa-user-check"></i>' : '<i class="fa-solid fa-user"></i>';
+            btn.title = authCode ? 'Signed in as ' + authUser : 'Sign in';
+
+            // Visibility choice only matters for cloud views while signed in
+            const col = document.getElementById('visibilityCol');
+            if (col) col.style.display = (authCode && !USE_LOCAL) ? '' : 'none';
+            if (!authCode) document.getElementById('inVisibility').value = 'public';
+        }
+
+        function openAuthModal() {
+            document.getElementById('authTitle').textContent = authCode ? 'Account' : 'Sign In';
+            document.getElementById('authSignedOut').style.display = authCode ? 'none' : '';
+            document.getElementById('authSignedIn').style.display = authCode ? '' : 'none';
+            document.getElementById('authWho').textContent = authUser;
+            document.getElementById('authError').style.display = 'none';
+            document.getElementById('authModal').style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+            if (!authCode) document.getElementById('authUser').focus();
+        }
+
+        function closeAuthModal() {
+            document.getElementById('authModal').style.display = 'none';
+            document.body.style.overflow = '';
+        }
+
+        function onAuthBackdropClick(e) {
+            if (e.target === document.getElementById('authModal')) closeAuthModal();
+        }
+
+        ['authUser', 'authPass'].forEach(id => {
+            document.getElementById(id).addEventListener('keydown', e => {
+                if (e.key === 'Enter') submitAuth('signIn');
+            });
+        });
+
+        // ── VISIBILITY TOGGLE ────────────────────────────────────────────
+        // Public ⇄ private can't be changed in place (ownership is set at write
+        // time), so it's either a recreate (create new, delete old) or a duplicate.
+        let _visZen = null;
+
+        function openVisModal(zen) {
+            const rec = locations.find(l => l.zen === zen);
+            if (!rec) return;
+            if (!authCode) { openAuthModal(); return; }
+            _visZen = zen;
+            const target = rec.isPrivate ? 'public' : 'private';
+            document.getElementById('visTitle').textContent = rec.isPrivate ? 'Make Public' : 'Make Private';
+            document.getElementById('visIcon').className = 'fa-solid ' + (rec.isPrivate ? 'fa-lock-open' : 'fa-lock');
+            document.getElementById('visText').innerHTML =
+                `Change <strong>${esc(rec.name)}</strong> from ${rec.isPrivate ? 'private' : 'public'} to <strong>${target}</strong>.`;
+            document.getElementById('visModal').style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeVisModal() {
+            _visZen = null;
+            document.getElementById('visModal').style.display = 'none';
+            document.body.style.overflow = '';
+        }
+
+        function onVisBackdropClick(e) {
+            if (e.target === document.getElementById('visModal')) closeVisModal();
+        }
+
+        async function changeVisibility(mode) {
+            const rec = locations.find(l => l.zen === _visZen);
+            if (!rec) { closeVisModal(); return; }
+            const btns = [document.getElementById('btnVisMove'), document.getElementById('btnVisCopy')];
+            btns.forEach(b => b.disabled = true);
+            try {
+                // Create first so a failure never loses the original
+                const created = await zenPost(
+                    { id: uid(), name: rec.name, location: rec.location, note: rec.note || '' },
+                    rec.viewName,
+                    !rec.isPrivate
+                );
+                locations.push(created);
+                let moved = false;
+                if (mode === 'move') {
+                    try {
+                        await zenDelete(rec.zen, rec.isPrivate);
+                        locations = locations.filter(l => l.zen !== rec.zen);
+                        const wp = waypoints.find(w => w.zen === rec.zen);
+                        if (wp) wp.zen = created.zen;
+                        moved = true;
+                    } catch (e) {
+                        toast('Copied, but removing the original failed: ' + e.message, 'warning');
+                    }
+                }
+                sortLocations();
+                renderCards();
+                renderRouteBar();
+                closeVisModal();
+                if (mode === 'copy' || moved) {
+                    toast(`${moved ? 'Moved' : 'Copied'} to ${created.isPrivate ? 'private' : 'public'}`, 'success');
+                }
+            } catch (e) {
+                if (!authCode) closeVisModal();
+                toast('Visibility change failed: ' + e.message, 'error');
+            } finally {
+                btns.forEach(b => b.disabled = false);
+            }
         }
 
         // ── LOAD ─────────────────────────────────────────────────────────
@@ -2118,6 +2599,7 @@
             const targetView = MULTI_VIEW
                 ? document.getElementById('inTargetView').value
                 : _viewLabel;
+            const isPrivate = !!authCode && document.getElementById('inVisibility').value === 'private';
 
             if (!name || !location) {
                 errEl.textContent = 'Both name and location are required.';
@@ -2143,7 +2625,7 @@
             btnAdd.innerHTML = '<span class="spinner" style="width:14px;height:14px;border-width:2px;display:inline-block;"></span> Saving…';
 
             try {
-                const saved = await recordAdd(name, location, note, targetView);
+                const saved = await recordAdd(name, location, note, targetView, isPrivate);
                 locations.push(saved);
                 sortLocations();
                 nameEl.value = '';
@@ -2358,6 +2840,15 @@
                 const badge = isPlus
                     ? `<span class="card-type-badge badge-pluscode"><i class="fa-solid fa-th"></i> Plus Code</span>`
                     : `<span class="card-type-badge badge-address"><i class="fa-solid fa-map-marker-alt"></i> Address</span>`;
+                const privateBadge = l.isPrivate
+                    ? `<span class="card-type-badge badge-private" title="Only visible to your account"><i class="fa-solid fa-lock"></i> Private</span>`
+                    : '';
+                // Cloud records only — home/local records have no public/private
+                const visBtn = (!SINGLE_VIEW && !USE_LOCAL && l.viewName !== 'home' && authCode)
+                    ? `<button class="btn-icon btn-visibility${l.isPrivate ? ' is-private' : ''}" onclick="openVisModal('${esc(l.zen)}')" title="${l.isPrivate ? 'Make public' : 'Make private'}">
+                  <i class="fa-solid ${l.isPrivate ? 'fa-lock' : 'fa-lock-open'}"></i> ${l.isPrivate ? 'Private' : 'Public'}
+                </button>`
+                    : '';
                 const _svName = (!SINGLE_VIEW && !USE_LOCAL && !MULTI_VIEW) ? sanitizeViewName(l.name) : '';
                 const subViewBtn = _svName
                     ? `<a class="btn-subview" href="?v=${encodeURIComponent(_viewLabel + '--' + _svName)}" title="Open sub-view: ${esc(_svName)}"><i class="fa-solid fa-arrow-down"></i></a>`
@@ -2382,7 +2873,7 @@
             ${singleBtn}
 
             <div class="view-section">
-              ${badge}
+              ${badge}${privateBadge}
               <div class="card-name" title="${esc(l.name)}">${esc(l.name)}</div>
               <div class="card-location" title="${esc(l.location)}">${esc(l.location)}</div>
               ${l.note ? `<div class="card-note">${esc(l.note)}</div>` : ''}
@@ -2401,6 +2892,7 @@
                 <button class="btn-icon danger btn-delete" onclick="confirmDelete('${esc(l.zen)}')">
                   <i class="fa-solid fa-trash-alt"></i> Delete
                 </button>`}
+                ${visBtn}
                 ${viewTag}
               </div>
             </div>
@@ -2522,7 +3014,7 @@
         }
 
         document.addEventListener('keydown', e => {
-            if (e.key === 'Escape') closeHelpModal();
+            if (e.key === 'Escape') { closeHelpModal(); closeAuthModal(); closeVisModal(); }
         });
 
         // ── BREADCRUMB ───────────────────────────────────────────────────
@@ -2570,6 +3062,8 @@
         // ── INIT ─────────────────────────────────────────────────────────
         applyTheme(localStorage.getItem(_themeKey) || 'dark');
         updatePageTitle();
+        renderAuthUI();
+        if (authCode) { startHeartbeat(); checkSession(); }
         document.getElementById('footerYear').textContent = new Date().getFullYear();
 
         if (history.length > 1) {
