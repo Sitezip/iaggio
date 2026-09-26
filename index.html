@@ -40,9 +40,7 @@
             --danger-dim: #3a0f0f;
             --warn: #ffb74d;
             --private: #c792ea;
-            --private-dim: rgba(199, 146, 234, 0.1);
-            --warn-dim: rgba(255, 183, 77, 0.1);
-            --text: #cde2f8;
+            --private-dim: rgba(199, 146, 234, 0.1);            --text: #cde2f8;
             --text-dim: #7da0cc;
             --text-bright: #eaf3ff;
             --mono: 'Source Code Pro', monospace;
@@ -70,9 +68,7 @@
             --danger-dim: #fde8e8;
             --warn: #e65100;
             --private: #7b3fb0;
-            --private-dim: rgba(123, 63, 176, 0.08);
-            --warn-dim: rgba(230, 81, 0, 0.08);
-            --text: #1e2f50;
+            --private-dim: rgba(123, 63, 176, 0.08);            --text: #1e2f50;
             --text-dim: #4a6a9a;
             --text-bright: #0d1e3c;
         }
@@ -528,13 +524,6 @@
             background: var(--private-dim);
             color: var(--private);
             border: 1px solid var(--private);
-            margin-left: 0.35rem;
-        }
-
-        .badge-restricted {
-            background: var(--warn-dim);
-            color: var(--warn);
-            border: 1px solid var(--warn);
             margin-left: 0.35rem;
         }
 
@@ -1956,7 +1945,7 @@
                 <div class="help-section">
                     <div class="help-section-icon"><i class="fa-solid fa-location-dot"></i></div>
                     <div class="help-section-title">Adding a Location</div>
-                    <div class="help-section-text">Enter a <strong>Name</strong> and an <strong>Address</strong> or <strong>Plus Code</strong>, plus an optional short <strong>Note</strong>, then click <kbd><i class="fa-solid fa-map-location-dot"></i> Add</kbd>. Use the <kbd><i class="fa-solid fa-eye"></i> Test</kbd> button to open the address in Google Maps and verify it before saving. When you're signed in on a cloud view, a <em>Visibility</em> dropdown lets you save the location as <strong>Public</strong> or <strong>Private</strong> (see <em>Accounts &amp; Private Locations</em> below). On cloud views, the <em>Access</em> toggle sets a public location to <strong>Editable</strong> (anyone with the view name can edit or delete it) or <strong>View-only</strong>, meaning anyone can see it and route to it, but once it's saved it's locked: only a site administrator can edit or delete it, and that includes you. Double-check the details before saving.</div>
+                    <div class="help-section-text">Enter a <strong>Name</strong> and an <strong>Address</strong> or <strong>Plus Code</strong>, plus an optional short <strong>Note</strong>, then click <kbd><i class="fa-solid fa-map-location-dot"></i> Add</kbd>. Use the <kbd><i class="fa-solid fa-eye"></i> Test</kbd> button to open the address in Google Maps and verify it before saving. When you're signed in on a cloud view, a <em>Visibility</em> dropdown lets you save the location as <strong>Public</strong> or <strong>Private</strong> (see <em>Accounts &amp; Private Locations</em> below).</div>
                 </div>
 
                 <div class="help-divider"></div>
@@ -1980,7 +1969,7 @@
                 <div class="help-section">
                     <div class="help-section-icon"><i class="fa-solid fa-pen"></i></div>
                     <div class="help-section-title">Editing &amp; Deleting</div>
-                    <div class="help-section-text">Each card has an <kbd><i class="fa-solid fa-pen"></i> Edit</kbd> button to update its name, location, or note inline, and a <kbd><i class="fa-solid fa-trash-alt"></i> Delete</kbd> button — click it again within a few seconds to confirm. Deleted locations disappear from the view right away. Cards marked <kbd><i class="fa-solid fa-eye"></i> View-only</kbd> show <kbd><i class="fa-solid fa-lock"></i> Locked</kbd> instead: only a site administrator can edit or delete them, though a signed-in user can still make a private copy.</div>
+                    <div class="help-section-text">Each card has an <kbd><i class="fa-solid fa-pen"></i> Edit</kbd> button to update its name, location, or note inline, and a <kbd><i class="fa-solid fa-trash-alt"></i> Delete</kbd> button — click it again within a few seconds to confirm. Deleted locations disappear from the view right away. Cards showing <kbd><i class="fa-solid fa-lock"></i> Locked</kbd> in place of these buttons can only be edited or deleted by a site administrator, though a signed-in user can still make a private copy.</div>
                 </div>
 
                 <div class="help-divider"></div>
@@ -2504,7 +2493,12 @@
             // Visibility choice only matters for cloud views while signed in
             const col = document.getElementById('visibilityCol');
             if (col) col.style.display = (authCode && !USE_LOCAL) ? '' : 'none';
-            if (!authCode) document.getElementById('inVisibility').value = 'public';
+            // Signed out, every add is public and editable — no access choice
+            document.getElementById('restrictCol').style.display = (authCode && !USE_LOCAL) ? '' : 'none';
+            if (!authCode) {
+                document.getElementById('inVisibility').value = 'public';
+                document.getElementById('inRestricted').checked = false;
+            }
             syncAccessToggle();
         }
 
@@ -2759,7 +2753,7 @@
                 : _viewLabel;
             const isPrivate = !!authCode && document.getElementById('inVisibility').value === 'private';
             const restrictEl = document.getElementById('inRestricted');
-            const restricted = !USE_LOCAL && !restrictEl.disabled && restrictEl.checked;
+            const restricted = !!authCode && !USE_LOCAL && !restrictEl.disabled && restrictEl.checked;
 
             if (!name || !location) {
                 errEl.textContent = 'Both name and location are required.';
@@ -3005,9 +2999,7 @@
                     : `<span class="card-type-badge badge-address"><i class="fa-solid fa-map-marker-alt"></i> Address</span>`;
                 const privateBadge = l.isPrivate
                     ? `<span class="card-type-badge badge-private" title="Only visible to your account"><i class="fa-solid fa-lock"></i> Private</span>`
-                    : l.restricted
-                        ? `<span class="card-type-badge badge-restricted" title="Public, but locked against edits and deletes"><i class="fa-solid fa-eye"></i> View-only</span>`
-                        : '';
+                    : '';
                 const canModify = !SINGLE_VIEW && (!l.restricted || canManageLocked());
                 // Cloud records only — home/local records have no public/private
                 const visBtn = (!SINGLE_VIEW && !USE_LOCAL && l.viewName !== 'home' && authCode)
@@ -3361,12 +3353,6 @@
                 col.style.display = '';
                 document.getElementById('inTargetView').innerHTML =
                     CONFIG.names.map(n => `<option value="${esc(n)}">${esc(n)}</option>`).join('');
-            }
-
-            // Editable / view-only only means something for cloud records
-            if (!USE_LOCAL) {
-                document.getElementById('restrictCol').style.display = '';
-                syncAccessToggle();
             }
 
             if (!USE_LOCAL) loadShortLink();
