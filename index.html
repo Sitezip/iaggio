@@ -1183,42 +1183,6 @@
             text-decoration: underline;
         }
 
-        .share-bar-warn {
-            color: var(--warn);
-        }
-
-        .share-bar-caution {
-            flex: 1;
-            min-width: 0;
-            color: var(--text);
-            font-family: var(--body);
-            letter-spacing: 0;
-        }
-
-        .share-bar-caution strong {
-            color: var(--warn);
-        }
-
-        .btn-share-cancel {
-            background: none;
-            border: none;
-            padding: 0.28rem 0.4rem;
-            font-family: var(--mono);
-            font-size: 0.72rem;
-            letter-spacing: 0.06em;
-            color: var(--text-dim);
-            cursor: pointer;
-            margin-left: auto;
-        }
-
-        .btn-share-cancel:hover {
-            color: var(--text);
-        }
-
-        .btn-share-cancel + .btn-copy {
-            margin-left: 0;
-        }
-
         .share-bar-loading {
             color: var(--text-dim);
             font-style: italic;
@@ -1246,6 +1210,11 @@
             flex-shrink: 0;
             white-space: nowrap;
             margin-left: auto;
+        }
+
+        /* a second button (Cancel + Confirm) sits beside the first, not spread apart */
+        .btn-copy + .btn-copy {
+            margin-left: 0;
         }
 
         .btn-copy:hover {
@@ -3252,9 +3221,12 @@
             bar.style.display = '';
             if (mode === 'confirm') {
                 bar.innerHTML = `
-                <i class="fa-solid fa-triangle-exclamation share-bar-icon share-bar-warn"></i>
-                <span class="share-bar-caution"><strong>Caution:</strong> the name, location, and note will be publicly available to anyone with this link.</span>
-                <button class="btn-share-cancel" onclick="renderShareBar()">Cancel</button>
+                <i class="fa-solid fa-triangle-exclamation share-bar-icon"></i>
+                <span class="share-bar-label">Caution:</span>
+                <span class="share-bar-link share-bar-loading">The name, location, and note will be publicly available to anyone with this link.</span>
+                <button class="btn-copy" onclick="renderShareBar()">
+                    <i class="fa-solid fa-xmark"></i> Cancel
+                </button>
                 <button class="btn-copy" id="btnCopyShort" onclick="confirmPrivateShare()">
                     <i class="fa-solid fa-check"></i> Confirm
                 </button>`;
