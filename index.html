@@ -1183,9 +1183,50 @@
             text-decoration: underline;
         }
 
+        .share-bar-warn {
+            color: var(--warn);
+        }
+
+        .share-bar-caution {
+            flex: 1;
+            min-width: 0;
+            color: var(--text);
+            font-family: var(--body);
+            letter-spacing: 0;
+        }
+
+        .share-bar-caution strong {
+            color: var(--warn);
+        }
+
+        .btn-share-cancel {
+            background: none;
+            border: none;
+            padding: 0.28rem 0.4rem;
+            font-family: var(--mono);
+            font-size: 0.72rem;
+            letter-spacing: 0.06em;
+            color: var(--text-dim);
+            cursor: pointer;
+            margin-left: auto;
+        }
+
+        .btn-share-cancel:hover {
+            color: var(--text);
+        }
+
+        .btn-share-cancel + .btn-copy {
+            margin-left: 0;
+        }
+
         .share-bar-loading {
             color: var(--text-dim);
             font-style: italic;
+        }
+
+        /* placeholder sentence wraps instead of truncating like a link */
+        .share-bar-link.share-bar-loading {
+            white-space: normal;
         }
 
         .btn-copy {
@@ -1204,6 +1245,7 @@
             transition: background 0.15s, border-color 0.15s;
             flex-shrink: 0;
             white-space: nowrap;
+            margin-left: auto;
         }
 
         .btn-copy:hover {
@@ -2002,7 +2044,7 @@
                 <div class="help-section">
                     <div class="help-section-icon"><i class="fa-solid fa-link"></i></div>
                     <div class="help-section-title">Sharing a View</div>
-                    <div class="help-section-text">On any named view (not <kbd>home</kbd>), a short link is automatically generated near the top of the page. Click <kbd><i class="fa-regular fa-copy"></i> Copy</kbd> to copy it to your clipboard and share it with others. To share just one location, use the <kbd><i class="fa-solid fa-up-right-from-square"></i></kbd> button in a card's corner — it opens a read-only page for that single location, with its own short link. Anyone with the view name can see its public locations, so pick a name that's hard to guess.</div>
+                    <div class="help-section-text">On any named view (not <kbd>home</kbd>), a <kbd><i class="fa-regular fa-copy"></i> Copy</kbd> button sits near the top of the page. Click it to create a short link: it appears next to the button and is copied to your clipboard, ready to share. On a <strong>private</strong> location's own page, Copy first shows a caution in the same bar; click <kbd><i class="fa-solid fa-check"></i> Confirm</kbd> to share a link that carries the location's name, address, and note, so anyone who has it can see them. To share just one location, use the <kbd><i class="fa-solid fa-up-right-from-square"></i></kbd> button in a card's corner — it opens a read-only page for that single location, with its own short link. Anyone with the view name can see its public locations, so pick a name that's hard to guess.</div>
                 </div>
 
                 <div class="help-divider"></div>
@@ -2093,7 +2135,9 @@
 
         // Single-record display: ?locationId={zen} fetches one exact record
         const _singleZen  = (_urlParams.get('locationId') || '').trim();
-        const SINGLE_VIEW = !!_singleZen;
+        // ?locationData={encrypted} carries a shared private record itself
+        const _singleData = (_urlParams.get('locationData') || '').trim();
+        const SINGLE_VIEW = !!_singleZen || !!_singleData;
 
         // || = parallel multi-view (each segment is an independent collection name)
         // |  = hierarchical path (full v value is the single collection name; | used for breadcrumbs only)
@@ -2716,8 +2760,9 @@
         </div>
       </div>`;
             try {
-                const record = await zenGetSingle(_singleZen);
-                locations = [record];
+                locations = _singleData
+                    ? await decodeLocationData(_singleData)
+                    : [await zenGetSingle(_singleZen)];
                 renderCards();
             } catch (e) {
                 grid.innerHTML = `
@@ -2729,6 +2774,40 @@
         </div>`;
                 toast('Failed to load location: ' + e.message, 'error');
             }
+        }
+
+        // ── SHARED LOCATION DATA ─────────────────────────────────────────
+        // A private record can't be read by whoever opens its ?locationId= link,
+        // so its share carries the record itself: ?locationData= is a
+        // zzzap-encrypted JSON array in the saveLocalLocs format. Only name,
+        // location and note are real — id/zen are fresh and viewName is 'home',
+        // so neither the record's zen nor its (secret) view name leaves the app.
+        async function encodeLocationData(rec) {
+            const text = JSON.stringify([{
+                id: uid(), name: rec.name, location: rec.location,
+                note: rec.note || '', zen: uid(), viewName: 'home'
+            }]);
+            const data = await apiPost('/Utilities/formatting/encrypt', { text });
+            if (!data?.success || typeof data.response !== 'string' || !data.response) {
+                throw new Error('Could not prepare the share link');
+            }
+            return data.response;
+        }
+
+        async function decodeLocationData(cipher) {
+            const data = await apiPost('/Utilities/formatting/decrypt', { text: cipher });
+            if (!data?.success || typeof data.response !== 'string') throw new Error('Invalid share link');
+            let list;
+            try { list = JSON.parse(data.response); } catch (_) { throw new Error('Invalid share link'); }
+            const recs = (Array.isArray(list) ? list : [])
+                .filter(r => r && typeof r.name === 'string' && typeof r.location === 'string')
+                .map(r => ({
+                    id: String(r.id || uid()),
+                    name: stripHtml(r.name), location: stripHtml(r.location), note: stripHtml(r.note),
+                    zen: uid(), viewName: 'home', isPrivate: false, restricted: false
+                }));
+            if (!recs.length) throw new Error('Invalid share link');
+            return recs;
         }
 
         // ── AUTO-ADD FROM URL ────────────────────────────────────────────
@@ -3160,49 +3239,105 @@
         });
 
         // ── SHORT LINK ───────────────────────────────────────────────────
-        async function loadShortLink() {
+        // The share bar starts with only a Copy button. The short link is
+        // requested from zzzap.io on the first click, then shown and copied;
+        // later clicks copy the same link. On a private record's isolated view,
+        // Copy first swaps in a caution + Confirm, and the link shortened is a
+        // ?locationData= URL carrying the record (see SHARED LOCATION DATA).
+        let _shortLink = null;
+
+        function renderShareBar(link, mode) {
             const bar = document.getElementById('shareBar');
             bar.className = 'share-bar';
             bar.style.display = '';
+            if (mode === 'confirm') {
+                bar.innerHTML = `
+                <i class="fa-solid fa-triangle-exclamation share-bar-icon share-bar-warn"></i>
+                <span class="share-bar-caution"><strong>Caution:</strong> the name, location, and note will be publicly available to anyone with this link.</span>
+                <button class="btn-share-cancel" onclick="renderShareBar()">Cancel</button>
+                <button class="btn-copy" id="btnCopyShort" onclick="confirmPrivateShare()">
+                    <i class="fa-solid fa-check"></i> Confirm
+                </button>`;
+                return;
+            }
             bar.innerHTML = `
                 <i class="fa-solid fa-link share-bar-icon"></i>
-                <span class="share-bar-label">Share</span>
-                <span class="share-bar-loading">Generating short link…</span>`;
-
-            try {
-                const u = encodeURIComponent(location.href);
-                const b = encodeURIComponent('https://v.iaggio.com/');
-                const r = await fetch(`https://zzzap.io/Url/link?link=${u}&baseUrl=${b}`);
-                const j = await r.json();
-                const out = j?.response?.short;
-
-                if (out) {
-                    bar.innerHTML = `
-                        <i class="fa-solid fa-link share-bar-icon"></i>
-                        <span class="share-bar-label">Share</span>
-                        <a class="share-bar-link" href="${esc(out)}" target="_blank" rel="noopener noreferrer">${esc(out)}</a>
-                        <button class="btn-copy" id="btnCopyShort" onclick="copyShortLink('${esc(out)}')">
-                            <i class="fa-regular fa-copy"></i> Copy
-                        </button>`;
-                } else {
-                    bar.style.display = 'none';
-                }
-            } catch (_) {
-                bar.style.display = 'none';
-            }
+                <span class="share-bar-label">Share:</span>
+                ${link
+                    ? `<a class="share-bar-link" href="${esc(link)}" target="_blank" rel="noopener noreferrer">${esc(link)}</a>`
+                    : `<span class="share-bar-link share-bar-loading">Use the copy button to create a shortlink to this view.</span>`}
+                <button class="btn-copy" id="btnCopyShort" onclick="copyShortLink()">
+                    <i class="fa-regular fa-copy"></i> Copy
+                </button>`;
         }
 
-        function copyShortLink(url) {
-            navigator.clipboard.writeText(url).then(() => {
-                const btn = document.getElementById('btnCopyShort');
-                if (!btn) return;
-                btn.classList.add('copied');
-                btn.innerHTML = '<i class="fa-solid fa-check"></i> Copied';
-                setTimeout(() => {
-                    btn.classList.remove('copied');
-                    btn.innerHTML = '<i class="fa-regular fa-copy"></i> Copy';
-                }, 2000);
+        async function fetchShortLink(url) {
+            const u = encodeURIComponent(url);
+            const b = encodeURIComponent('https://v.iaggio.com/');
+            const r = await fetch(`https://zzzap.io/Url/link?link=${u}&baseUrl=${b}`);
+            const out = (await r.json())?.response?.short;
+            if (!out) throw new Error('No short link returned');
+            return out;
+        }
+
+        function copyShortLink() {
+            if (_shortLink) {
+                copyText(Promise.resolve(_shortLink)).then(flashCopied, copyFailed);
+                return;
+            }
+            if (SINGLE_VIEW && !locations.length) { toast('Still loading — try again in a moment', 'warning'); return; }
+            if (_singleZen && locations[0]?.isPrivate) { renderShareBar(null, 'confirm'); return; }
+            createAndCopy(Promise.resolve(location.href));
+        }
+
+        function confirmPrivateShare() {
+            createAndCopy(encodeLocationData(locations[0]).then(cipher =>
+                location.origin + location.pathname + '?locationData=' + encodeURIComponent(cipher)));
+        }
+
+        // Called straight from the click: the clipboard write starts in the
+        // gesture with the link still pending, so Safari doesn't block it.
+        function createAndCopy(urlP) {
+            const btn = document.getElementById('btnCopyShort');
+            document.querySelectorAll('#shareBar button').forEach(b => b.disabled = true);
+            btn.innerHTML = '<span class="spinner" style="width:12px;height:12px;border-width:2px;display:inline-block;"></span> Copy';
+            const linkP = urlP.then(fetchShortLink);
+            const copyP = copyText(linkP);
+            copyP.catch(() => {});
+            linkP.then(link => {
+                _shortLink = link;
+                renderShareBar(link);
+                copyP.then(flashCopied, copyFailed);
+            }, () => {
+                renderShareBar();
+                toast('Could not create a short link — try again', 'error');
             });
+        }
+
+        function copyText(textP) {
+            try {
+                if (window.ClipboardItem && navigator.clipboard?.write) {
+                    return navigator.clipboard.write([new ClipboardItem({
+                        'text/plain': textP.then(t => new Blob([t], { type: 'text/plain' }))
+                    })]);
+                }
+            } catch (_) { /* fall through */ }
+            return textP.then(t => navigator.clipboard.writeText(t));
+        }
+
+        function copyFailed() {
+            toast('Copy failed — copy the link from the share bar', 'warning');
+        }
+
+        function flashCopied() {
+            const btn = document.getElementById('btnCopyShort');
+            if (!btn) return;
+            btn.classList.add('copied');
+            btn.innerHTML = '<i class="fa-solid fa-check"></i> Copied';
+            setTimeout(() => {
+                btn.classList.remove('copied');
+                btn.innerHTML = '<i class="fa-regular fa-copy"></i> Copy';
+            }, 2000);
         }
 
         // ── HELP MODAL ───────────────────────────────────────────────────
@@ -3420,7 +3555,8 @@
             if (addPanel) addPanel.style.display = 'none';
             const toolbar = document.querySelector('.toolbar');
             if (toolbar) toolbar.style.display = 'none';
-            loadShortLink();
+            // A ?locationData= share is a snapshot handed to someone — no re-sharing
+            if (!_singleData) renderShareBar();
             loadSingleLocation();
         } else {
             initViewInput();
@@ -3433,7 +3569,7 @@
                     CONFIG.names.map(n => `<option value="${esc(n)}">${esc(n)}</option>`).join('');
             }
 
-            if (!USE_LOCAL) loadShortLink();
+            if (!USE_LOCAL) renderShareBar();
             loadLocations();
         }
     </script>
