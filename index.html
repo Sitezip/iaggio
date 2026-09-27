@@ -1188,6 +1188,17 @@
             font-style: italic;
         }
 
+        /* caution state (private share): same structure, warn colors */
+        .share-bar-warn {
+            border-color: var(--warn);
+        }
+
+        .share-bar-warn .share-bar-icon,
+        .share-bar-warn .share-bar-label,
+        .share-bar-warn .share-bar-link {
+            color: var(--warn);
+        }
+
         /* placeholder sentence wraps instead of truncating like a link */
         .share-bar-link.share-bar-loading {
             white-space: normal;
@@ -3220,6 +3231,7 @@
             bar.className = 'share-bar';
             bar.style.display = '';
             if (mode === 'confirm') {
+                bar.classList.add('share-bar-warn');
                 bar.innerHTML = `
                 <i class="fa-solid fa-triangle-exclamation share-bar-icon"></i>
                 <span class="share-bar-label">Caution:</span>
