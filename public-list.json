@@ -3,5 +3,10 @@
         "view": "yardsales--USA",
         "label": "Yard Sales › USA",
         "icon": "fa-tags"
+    },
+    {
+        "view": "restaurants--USA",
+        "label": "Restaurants › USA",
+        "icon": "fa-utensils"
     }
 ]

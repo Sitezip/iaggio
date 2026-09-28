@@ -258,7 +258,7 @@
         main {
             position: relative;
             z-index: 1;
-            padding: 2rem 0 4rem;
+            padding: 1rem 0 2rem;
         }
 
         /* ── Add Panel ── */
@@ -611,7 +611,8 @@
             text-overflow: ellipsis;
             line-height: 1.2;
             /* clears the 26px corner button group */
-            margin-top: calc(26px + 0.6rem);
+            /* margin-top: calc(26px + 0.6rem); */
+            margin-top: 20px
         }
 
         .card-location {
@@ -1415,6 +1416,35 @@
             transition: all 0.15s;
         }
 
+        .btn-route-map {
+            background: var(--accent);
+            border: 1px solid var(--accent);
+            border-radius: var(--radius);
+            padding: 0.3rem 0.8rem;
+            font-family: var(--mono);
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+            color: #030d1f;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            flex-shrink: 0;
+            white-space: nowrap;
+            transition: all 0.15s;
+        }
+
+        .btn-route-map:hover {
+            background: var(--accent2);
+            border-color: var(--accent2);
+            box-shadow: 0 0 14px var(--accent-glow);
+        }
+
+        [data-theme="light"] .btn-route-map {
+            color: #ffffff;
+        }
+
         .btn-route-clear:hover {
             border-color: var(--danger);
             color: var(--danger);
@@ -1434,6 +1464,15 @@
             line-clamp: 3;
             -webkit-box-orient: vertical;
             overflow: hidden;
+        }
+
+        /* ── Card "Set: MM/DD/YY" date ── */
+        .card-set {
+            font-family: var(--mono);
+            font-size: 0.65rem;
+            letter-spacing: 0.06em;
+            color: var(--text-dim);
+            opacity: 0.8;
         }
 
         .form-label-optional {
@@ -2000,7 +2039,7 @@
                 <div class="help-section">
                     <div class="help-section-icon"><i class="fa-solid fa-map-signs"></i></div>
                     <div class="help-section-title">Multi-Stop Routes</div>
-                    <div class="help-section-text">Click the circular <kbd><i class="fa-solid fa-compass"></i></kbd> toggle, the right-most button in each card's top-right corner, to add it as a waypoint. Cards are numbered in the order you select them. A route bar appears at the bottom showing the sequence. Hit <kbd><i class="fa-solid fa-route"></i> Navigate</kbd> on any card to set it as the destination and launch the full route in Google Maps. Click <kbd>Clear</kbd> in the route bar to reset.</div>
+                    <div class="help-section-text">Click the circular <kbd><i class="fa-solid fa-compass"></i></kbd> toggle, the right-most button in each card's top-right corner, to add it as a waypoint. Cards are numbered in the order you select them. A route bar appears at the bottom showing the sequence. Hit <kbd><i class="fa-solid fa-route"></i> Navigate</kbd> on any card to set it as the destination and launch the full route in Google Maps. Or click <kbd><i class="fa-solid fa-map-location-dot"></i> Map It!</kbd> in the route bar to open the whole route in Google Maps, in order, with the last stop as the destination. Click <kbd>Clear</kbd> in the route bar to reset. Your route is saved in this browser and stays put as you switch views, so you can build one stop list from several views; signing out clears it.</div>
                 </div>
 
                 <div class="help-divider"></div>
@@ -2203,6 +2242,21 @@
             });
         }
 
+        // ── DATES ────────────────────────────────────────────────────────
+        // zts is the server's "YYYY-MM-DD HH:MM:SS" timestamp; local records get
+        // the same shape so both render alike.
+        function localZts() {
+            const d = new Date(), p = n => String(n).padStart(2, '0');
+            return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
+        }
+
+        // "2026-09-26 22:20:46" → "09/26/26"; '' when missing or unrecognised.
+        // Parsed as text (not Date) so the day never shifts by timezone.
+        function formatZts(zts) {
+            const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(zts || ''));
+            return m ? `${m[2]}/${m[3]}/${m[1].slice(2)}` : '';
+        }
+
         // ── MAPS URL ─────────────────────────────────────────────────────
         function mapsUrl(loc) {
             return 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(loc);
@@ -2281,7 +2335,7 @@
             )));
             return results.flatMap((data, i) => (Array.isArray(data.response) ? data.response : []).map(r => ({
                 id: r.id, name: r.name, location: r.location,
-                note: r.note || '', zen: r.zen, viewName, isPrivate: !!r.private,
+                note: r.note || '', zen: r.zen, zts: r.zts || '', viewName, isPrivate: !!r.private,
                 restricted: groups[i] === CONFIG.lockedGroup
             })));
         }
@@ -2295,7 +2349,7 @@
             if (!r) throw new Error('Record not found');
             return {
                 id: r.id, name: r.name, location: r.location,
-                note: r.note || '', zen: r.zen, viewName: _viewLabel, isPrivate: !!r.private,
+                note: r.note || '', zen: r.zen, zts: r.zts || '', viewName: _viewLabel, isPrivate: !!r.private,
                 restricted: isRestricted(r)
             };
         }
@@ -2311,7 +2365,7 @@
                 !!isPrivate
             );
             const r = data.response[0];
-            return { id: r.id, name: r.name, location: r.location, note: r.note || '', zen: r.zen, viewName: MULTI_VIEW ? vn : _viewLabel, isPrivate: !!isPrivate, restricted: locked };
+            return { id: r.id, name: r.name, location: r.location, note: r.note || '', zen: r.zen, zts: r.zts || '', viewName: MULTI_VIEW ? vn : _viewLabel, isPrivate: !!isPrivate, restricted: locked };
         }
 
         // restricted: a locked public record, only reachable by an admin — the
@@ -2325,7 +2379,7 @@
             );
             const r = data.response[0];
             const src = locations.find(l => l.zen === zen)?.viewName || _viewLabel;
-            return { id: r.id, name: r.name, location: r.location, note: r.note || '', zen: r.zen, viewName: src, isPrivate: !!isPrivate, restricted: !!restricted };
+            return { id: r.id, name: r.name, location: r.location, note: r.note || '', zen: r.zen, zts: r.zts || '', viewName: src, isPrivate: !!isPrivate, restricted: !!restricted };
         }
 
         // Public records are soft-deleted (flagged, not removed); private ones are
@@ -2343,7 +2397,7 @@
         async function recordAdd(name, location, note, targetView, isPrivate = false, restricted = false) {
             const cleanNote = stripHtml(note);
             if (USE_LOCAL || targetView === 'home') {
-                const record = { id: uid(), name, location, note: cleanNote, zen: uid(), viewName: 'home' };
+                const record = { id: uid(), name, location, note: cleanNote, zen: uid(), zts: localZts(), viewName: 'home' };
                 const locs = getLocalLocs();
                 locs.push(record);
                 saveLocalLocs(locs);
@@ -2502,6 +2556,8 @@
 
         async function clearCaches() {
             try { sessionStorage.clear(); } catch (_) { /* ignore */ }
+            // The saved route can hold private stops' names/addresses
+            try { localStorage.removeItem(ROUTE_KEY); } catch (_) { /* ignore */ }
             try {
                 if ('caches' in window) {
                     const keys = await caches.keys();
@@ -2548,8 +2604,6 @@
         // Private records only come back on an authenticated read, so reload the view
         function reloadForAuthChange() {
             if (USE_LOCAL) return;
-            waypoints = [];
-            renderRouteBar();
             if (SINGLE_VIEW) loadSingleLocation();
             else loadLocations();
         }
@@ -2665,8 +2719,8 @@
                     try {
                         await zenDelete(rec.zen, rec.isPrivate, rec.restricted);
                         locations = locations.filter(l => l.zen !== rec.zen);
-                        const wp = waypoints.find(w => w.zen === rec.zen);
-                        if (wp) wp.zen = created.zen;
+                        const wpIdx = waypointIndex(rec);
+                        if (wpIdx >= 0) { Object.assign(waypoints[wpIdx], { id: created.id, zen: created.zen }); saveWaypoints(); }
                         moved = true;
                     } catch (e) {
                         toast('Copied, but removing the original failed: ' + e.message, 'warning');
@@ -2947,9 +3001,10 @@
                 card.appendChild(overlay);
             }
             try {
+                const rec = locations.find(l => l.zen === zen);
                 await recordDelete(zen);
                 locations = locations.filter(l => l.zen !== zen);
-                waypoints = waypoints.filter(w => w.zen !== zen);
+                if (rec) { waypoints = waypoints.filter(w => !sameStop(w, rec)); saveWaypoints(); }
                 renderCards();
                 renderRouteBar();
                 toast('Location removed', 'success');
@@ -2989,11 +3044,11 @@
             try {
                 const updated = await recordUpdate(zen, newName, newLoc, newNote);
                 const idx = locations.findIndex(l => l.zen === zen);
+                const wpIdx = waypointIndex(locations[idx]);
                 locations[idx] = updated;
-                const wpIdx = waypoints.findIndex(w => w.zen === zen);
                 if (wpIdx >= 0) {
-                    waypoints[wpIdx].name = updated.name;
-                    waypoints[wpIdx].location = updated.location;
+                    Object.assign(waypoints[wpIdx], { id: updated.id, zen: updated.zen, name: updated.name, location: updated.location });
+                    saveWaypoints();
                 }
                 sortLocations();
                 renderCards();
@@ -3007,29 +3062,60 @@
         }
 
         // ── WAYPOINTS ────────────────────────────────────────────────────
-        let waypoints = []; // ordered: { zen, name, location }
+        // The route persists across views (each view is a full page load) in
+        // localStorage. Stops are matched by the record's own `id` — zen is
+        // re-encrypted on every server read, so it can't identify a stop later.
+        const ROUTE_KEY = 'iaggio_route';
+        let waypoints = loadWaypoints(); // ordered: { id, zen, name, location }
+
+        function loadWaypoints() {
+            try {
+                const list = JSON.parse(localStorage.getItem(ROUTE_KEY) || '[]');
+                return Array.isArray(list)
+                    ? list.filter(w => w && typeof w.location === 'string' && typeof w.name === 'string')
+                    : [];
+            } catch (_) { return []; }
+        }
+
+        function saveWaypoints() {
+            try {
+                if (waypoints.length) localStorage.setItem(ROUTE_KEY, JSON.stringify(waypoints));
+                else localStorage.removeItem(ROUTE_KEY);
+            } catch (_) { /* ignore */ }
+        }
+
+        function sameStop(w, rec) {
+            return w.id && rec.id ? w.id === rec.id : w.zen === rec.zen;
+        }
+
+        function waypointIndex(rec) {
+            return rec ? waypoints.findIndex(w => sameStop(w, rec)) : -1;
+        }
 
         function toggleWaypoint(zen) {
             const loc = locations.find(l => l.zen === zen);
             if (!loc) return;
-            const idx = waypoints.findIndex(w => w.zen === zen);
+            const idx = waypointIndex(loc);
             if (idx >= 0) {
                 waypoints.splice(idx, 1);
             } else {
-                waypoints.push({ zen: loc.zen, name: loc.name, location: loc.location });
+                waypoints.push({ id: loc.id, zen: loc.zen, name: loc.name, location: loc.location });
             }
+            saveWaypoints();
             renderCards();
             renderRouteBar();
         }
 
         function clearWaypoints() {
             waypoints = [];
+            saveWaypoints();
             renderCards();
             renderRouteBar();
         }
 
         function navigateTo(zen, location) {
-            const wps = waypoints.filter(w => w.zen !== zen);
+            const rec = locations.find(l => l.zen === zen);
+            const wps = rec ? waypoints.filter(w => !sameStop(w, rec)) : waypoints;
             if (wps.length === 0) {
                 window.open(mapsUrl(location), '_blank', 'noopener,noreferrer');
                 return;
@@ -3038,6 +3124,22 @@
             const wpStr = wps.map(w => encodeURIComponent(w.location)).join('|');
             window.open(
                 `https://www.google.com/maps/dir/?api=1&destination=${dest}&waypoints=${wpStr}`,
+                '_blank', 'noopener,noreferrer'
+            );
+        }
+
+        // Route bar "Map It!": the saved route in order — last stop is the
+        // destination, the rest are waypoints (Google starts from the user).
+        function mapRoute() {
+            if (!waypoints.length) return;
+            const dest = waypoints[waypoints.length - 1];
+            if (waypoints.length === 1) {
+                window.open(mapsUrl(dest.location), '_blank', 'noopener,noreferrer');
+                return;
+            }
+            const wpStr = waypoints.slice(0, -1).map(w => encodeURIComponent(w.location)).join('|');
+            window.open(
+                `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(dest.location)}&waypoints=${wpStr}`,
                 '_blank', 'noopener,noreferrer'
             );
         }
@@ -3067,6 +3169,9 @@
                     <i class="fa-solid fa-route route-bar-icon"></i>
                     <span class="route-bar-label">Route&nbsp;·&nbsp;${waypoints.length}</span>
                     <div class="route-bar-chips">${chips}</div>
+                    <button class="btn-route-map" onclick="mapRoute()">
+                        <i class="fa-solid fa-map-location-dot"></i> Map It!
+                    </button>
                     <button class="btn-route-clear" onclick="clearWaypoints()">
                         <i class="fa-solid fa-times"></i> Clear
                     </button>
@@ -3098,7 +3203,7 @@
             }
 
             grid.innerHTML = filtered.map((l, i) => {
-                const wpIdx = waypoints.findIndex(w => w.zen === l.zen);
+                const wpIdx = waypointIndex(l);
                 const isWaypoint = wpIdx >= 0;
                 const isPlus = isPlusCode(l.location);
                 const viewTag = MULTI_VIEW
@@ -3144,6 +3249,7 @@
               <div class="card-name" title="${esc(l.name)}">${typeIcon}${esc(l.name)}</div>
               <div class="card-location" title="${esc(l.location)}">${esc(l.location)}</div>
               ${l.note ? `<div class="card-note">${esc(l.note)}</div>` : ''}
+              ${formatZts(l.zts) ? `<div class="card-set">Set: ${esc(formatZts(l.zts))}</div>` : ''}
               <div class="maps-row">
                 <button class="maps-link" onclick="navigateTo('${esc(l.zen)}', '${esc(l.location)}')">
                   <i class="fa-solid fa-route"></i> Navigate
@@ -3417,6 +3523,7 @@
         applyTheme(localStorage.getItem(_themeKey) || 'dark');
         updatePageTitle();
         renderAuthUI();
+        renderRouteBar();   // restore a route saved from another view
         showPendingNotice();
         if (authCode) { startHeartbeat(); checkSession(); }
         document.getElementById('footerYear').textContent = new Date().getFullYear();
