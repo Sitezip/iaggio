@@ -2310,11 +2310,14 @@
 
         // `private` is stored in the record's own json so the card can show it;
         // the server-side ownership comes from publicAuthCd on the write.
+        // entityId_z1000 records which signed-in user created a public record.
         function recordJson(record, isPrivate, restricted) {
-            return encodeURIComponent(JSON.stringify({
+            const json = {
                 id: record.id, name: record.name, location: record.location,
                 note: record.note || '', private: !!isPrivate, restricted: !!restricted
-            }));
+            };
+            if (record.entityId) json.entityId_z1000 = record.entityId;
+            return encodeURIComponent(JSON.stringify(json));
         }
 
         // zid is "{n}|{group}|{name}" — the group tells us if the record is locked.
@@ -2336,7 +2339,7 @@
             return results.flatMap((data, i) => (Array.isArray(data.response) ? data.response : []).map(r => ({
                 id: r.id, name: r.name, location: r.location,
                 note: r.note || '', zen: r.zen, zts: r.zts || '', viewName, isPrivate: !!r.private,
-                restricted: groups[i] === CONFIG.lockedGroup
+                restricted: groups[i] === CONFIG.lockedGroup, entityId: r.entityId_z1000 || ''
             })));
         }
 
@@ -2350,7 +2353,7 @@
             return {
                 id: r.id, name: r.name, location: r.location,
                 note: r.note || '', zen: r.zen, zts: r.zts || '', viewName: _viewLabel, isPrivate: !!r.private,
-                restricted: isRestricted(r)
+                restricted: isRestricted(r), entityId: r.entityId_z1000 || ''
             };
         }
 
@@ -2360,12 +2363,14 @@
             const locked = !isPrivate && !!restricted;
             if (isPrivate) await ensureSession();
             const group = locked ? CONFIG.lockedGroup : CONFIG.group;
+            // Public records made while signed in carry the creator's user id
+            const entityId = !isPrivate && authCode && authUserId ? authUserId : '';
             const data = await apiGet(
-                `/Collections/zenPost?group=${encodeURIComponent(group)}&name=${encodeURIComponent(vn)}&json=${recordJson(record, isPrivate, locked)}`,
+                `/Collections/zenPost?group=${encodeURIComponent(group)}&name=${encodeURIComponent(vn)}&json=${recordJson({ ...record, entityId }, isPrivate, locked)}`,
                 !!isPrivate
             );
             const r = data.response[0];
-            return { id: r.id, name: r.name, location: r.location, note: r.note || '', zen: r.zen, zts: r.zts || '', viewName: MULTI_VIEW ? vn : _viewLabel, isPrivate: !!isPrivate, restricted: locked };
+            return { id: r.id, name: r.name, location: r.location, note: r.note || '', zen: r.zen, zts: r.zts || '', viewName: MULTI_VIEW ? vn : _viewLabel, isPrivate: !!isPrivate, restricted: locked, entityId };
         }
 
         // restricted: a locked public record, only reachable by an admin — the
@@ -2373,13 +2378,17 @@
         async function zenPut(zen, record, isPrivate, restricted = false) {
             const withAuth = !!isPrivate || !!restricted;
             if (withAuth) await ensureSession();
+            // _z1000 members are stripped on read for non-root callers and zenPut
+            // replaces the whole json, so re-add the id on every public update —
+            // the original if we could see it (root), else the signed-in user's.
+            const entityId = isPrivate ? '' : (record.entityId || (authCode && authUserId) || '');
             const data = await apiGet(
-                `/Collections/zenPut?zen=${encodeURIComponent(zen)}&json=${recordJson(record, isPrivate, restricted)}`,
+                `/Collections/zenPut?zen=${encodeURIComponent(zen)}&json=${recordJson({ ...record, entityId }, isPrivate, restricted)}`,
                 withAuth
             );
             const r = data.response[0];
             const src = locations.find(l => l.zen === zen)?.viewName || _viewLabel;
-            return { id: r.id, name: r.name, location: r.location, note: r.note || '', zen: r.zen, zts: r.zts || '', viewName: src, isPrivate: !!isPrivate, restricted: !!restricted };
+            return { id: r.id, name: r.name, location: r.location, note: r.note || '', zen: r.zen, zts: r.zts || '', viewName: src, isPrivate: !!isPrivate, restricted: !!restricted, entityId };
         }
 
         // Public records are soft-deleted (flagged, not removed); private ones are
@@ -2417,7 +2426,7 @@
                 saveLocalLocs(locations);
                 return { ...rec };
             }
-            return await zenPut(zen, { id: rec.id, name, location, note: cleanNote }, rec.isPrivate, rec.restricted);
+            return await zenPut(zen, { id: rec.id, name, location, note: cleanNote, entityId: rec.entityId }, rec.isPrivate, rec.restricted);
         }
 
         async function recordDelete(zen) {
@@ -2443,17 +2452,18 @@
         const AUTH_KEY = 'iaggio_auth';
         let authCode = null;
         let authUser = '';
+        let authUserId = '';   // entities.user.id from sign-in
         let _heartbeat = null;
 
         (function restoreAuth() {
             try {
                 const saved = JSON.parse(localStorage.getItem(AUTH_KEY) || 'null');
-                if (saved?.code) { authCode = saved.code; authUser = saved.user || ''; }
+                if (saved?.code) { authCode = saved.code; authUser = saved.user || ''; authUserId = saved.userId || ''; }
             } catch (_) { /* ignore */ }
         })();
 
         function persistAuth() {
-            if (authCode) localStorage.setItem(AUTH_KEY, JSON.stringify({ code: authCode, user: authUser }));
+            if (authCode) localStorage.setItem(AUTH_KEY, JSON.stringify({ code: authCode, user: authUser, userId: authUserId }));
             else localStorage.removeItem(AUTH_KEY);
         }
 
@@ -2512,6 +2522,7 @@
 
                 authCode = code;
                 authUser = user;
+                authUserId = entities?.user?.id != null ? String(entities.user.id) : '';
                 persistAuth();
                 passEl.value = '';
                 startHeartbeat();
@@ -2538,6 +2549,7 @@
             _heartbeat = null;
             authCode = null;
             authUser = '';
+            authUserId = '';
             persistAuth();
             if (code) {
                 try {
